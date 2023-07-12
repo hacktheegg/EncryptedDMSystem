@@ -16,15 +16,17 @@ class Program
         public class Generate
         {
             public static void Name(string Name1, string Name2, string chatName) {
-                char[] Name1CharArray = utilities.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name1)).ToCharArray();
-                char[] Name2CharArray = utilities.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name2)).ToCharArray();
+                string Name1Hex = utilities.ByteArrayToHexString(Name1);
+                string Name2Hex = utilities.ByteArrayToHexString(Name2);
 
-                string longerString = utilities.longerString(Name1, Name2);
+
+                string longerString = utilities.longerString(Name1Hex, Name2Hex);
 
                 char[] FileName = new char[new string(Name1CharArray).Length*2];
 
-                int FileNamePointer = 0;
 
+                int FileNamePointer = 0;
+                //migrating code
                 for (int NameCharArrayPointer = 0; NameCharArrayPointer < longerString.Length*2; NameCharArrayPointer++) {
                     if (NameCharArrayPointer < Name1CharArray.Length) {
                         FileName[FileNamePointer] = Name1CharArray[NameCharArrayPointer];
@@ -46,39 +48,6 @@ class Program
                 Console.WriteLine(new string(FileName));
 
                 utilities.fileCreation(new string(FileName), chatName);
-
-
-
-               
-/*
-                for (int NameByteArrayPointer = 0; NameByteArrayPointer < longerString.Length; NameByteArrayPointer++) {
-
-                    Console.WriteLine(NameByteArrayPointer + "   " + Name1ByteArray.Length);
-
-                    if (NameByteArrayPointer < Name1ByteArray.Length) {
-                        FileName[FileNamePointer] = Name1ByteArray[NameByteArrayPointer];
-                    } else {
-                        FileName[FileNamePointer] = 35;
-                    }
-
-                    FileNamePointer++;
-
-                    Console.WriteLine(NameByteArrayPointer + "   " + Name2ByteArray.Length);
-
-                    if (NameByteArrayPointer < Name2ByteArray.Length) {
-                        FileName[FileNamePointer] = Name2ByteArray[NameByteArrayPointer];
-                    } else {
-                        FileName[FileNamePointer] = 35;
-                    }
-
-                    FileNamePointer++;
-
-                    Console.WriteLine(Encoding.ASCII.GetString(FileName));
-
-                }
-
-                utilities.fileCreation(chatName, Encoding.ASCII.GetString(FileName));
-*/
             }
         }
     }
@@ -93,10 +62,8 @@ class Program
                 return b;
             }
         }
-
         public static void fileCreation(string ChatName, string internalHeading) {
             string fileName = ChatName + ".txt";
-
 
             try
             {
@@ -129,14 +96,25 @@ class Program
                 Console.WriteLine(Ex.ToString());
             }
         }
-        public static string ByteArrayToHexString(byte[] ba)
+    }
+    public class encode {
+        public static string ByteArrayToHexString(string a)
         {
+            ba = Encoding.ASCII.GetBytes(a);
             StringBuilder hex = new StringBuilder(ba.Length * 2);
             foreach (byte b in ba)
             hex.AppendFormat("{0:x2}", b);
 
             Console.WriteLine(hex.ToString());
             return hex.ToString();
+        }
+        public static string WeaveStrings(string StringA, string StringB) {
+            char[] CharA = Encoding.ASCII.GetBytes(StringA);
+            char[] CharB = Encoding.ASCII.GetBytes(StringB);
+
+            char[] return = new char[utilities.longerString(StringA, StringB).Length*2];
+
+            //where code being migrated
         }
     }
 }

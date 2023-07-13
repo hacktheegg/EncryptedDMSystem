@@ -16,38 +16,12 @@ class Program
         public class Generate
         {
             public static void Name(string Name1, string Name2, string chatName) {
-                string Name1Hex = utilities.ByteArrayToHexString(Name1);
-                string Name2Hex = utilities.ByteArrayToHexString(Name2);
+                string Name1Hex = utilities.encode.ByteArrayToHexString(Name1);
+                string Name2Hex = utilities.encode.ByteArrayToHexString(Name2);
 
+                string FileName = utilities.encode.WeaveStrings(Name1Hex, Name2Hex);
 
-                string longerString = utilities.longerString(Name1Hex, Name2Hex);
-
-                char[] FileName = new char[new string(Name1CharArray).Length*2];
-
-
-                int FileNamePointer = 0;
-                //migrating code
-                for (int NameCharArrayPointer = 0; NameCharArrayPointer < longerString.Length*2; NameCharArrayPointer++) {
-                    if (NameCharArrayPointer < Name1CharArray.Length) {
-                        FileName[FileNamePointer] = Name1CharArray[NameCharArrayPointer];
-                    } else {
-                        FileName[FileNamePointer] = '0';
-                    }
-
-                    FileNamePointer++;
-
-                    if (NameCharArrayPointer < Name2CharArray.Length) {
-                        FileName[FileNamePointer] = Name2CharArray[NameCharArrayPointer];
-                    } else {
-                        FileName[FileNamePointer] = '0';
-                    }
-
-                    FileNamePointer++;
-                }
-
-                Console.WriteLine(new string(FileName));
-
-                utilities.fileCreation(new string(FileName), chatName);
+                utilities.fileCreation(FileName, chatName);
             }
         }
     }
@@ -87,7 +61,7 @@ class Program
                     string s = "";
                     while ((s = sr.ReadLine()) != null)
                     {
-                        Console.WriteLine(s);
+                        //Console.WriteLine(s);
                     }
                 }
             }
@@ -96,26 +70,47 @@ class Program
                 Console.WriteLine(Ex.ToString());
             }
         }
-    }
-    public class encode {
-        public static string ByteArrayToHexString(string a)
-        {
-            ba = Encoding.ASCII.GetBytes(a);
-            StringBuilder hex = new StringBuilder(ba.Length * 2);
-            foreach (byte b in ba)
-            hex.AppendFormat("{0:x2}", b);
+        public class encode {
+            public static string ByteArrayToHexString(string a)
+            {
+                byte[] ba = Encoding.ASCII.GetBytes(a);
+                StringBuilder hex = new StringBuilder(ba.Length * 2);
+                foreach (byte b in ba)
+                hex.AppendFormat("{0:x2}", b);
 
-            Console.WriteLine(hex.ToString());
-            return hex.ToString();
-        }
-        public static string WeaveStrings(string StringA, string StringB) {
-            char[] CharA = Encoding.ASCII.GetBytes(StringA);
-            char[] CharB = Encoding.ASCII.GetBytes(StringB);
+                return hex.ToString();
+            }
+            public static string WeaveStrings(string StringA, string StringB) {
+                char[] CharA = StringA.ToCharArray();
+                char[] CharB = StringB.ToCharArray();
 
-            char[] return = new char[utilities.longerString(StringA, StringB).Length*2];
+                string longerString = utilities.longerString(CharA.ToString(), CharB.ToString());
 
-            //where code being migrated
+                char[] returnVal = new char[longerString.Length*2];
+                
+                int FileNamePointer = 0;
+
+                for (int charPointer = 0; charPointer < longerString.Length; charPointer++) {
+
+                    if (charPointer < CharA.Length) {
+                        returnVal[FileNamePointer] = CharA[charPointer];
+                    } else {
+                        returnVal[FileNamePointer] = '0';
+                    }
+
+                    FileNamePointer++;
+
+                    if (charPointer < CharB.Length) {
+                        returnVal[FileNamePointer] = CharB[charPointer];
+                    } else {
+                        returnVal[FileNamePointer] = '0';
+                    }
+
+                    FileNamePointer++;
+                }
+                
+                return new string(returnVal);
+            }
         }
     }
 }
-

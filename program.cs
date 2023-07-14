@@ -8,6 +8,12 @@ class Program
     {
         Chat.Generate.Name("LongMessage", "Short", "ChatRoom");
 
+        string[] var = Chat.Read.Name.All(@"C:\Users\user1\OneDrive\Desktop\Non-Desktop\Coding\C#\EncryptedDMSystem");
+
+        for (int i = 0; i < var.Length; i++) {
+            Console.WriteLine(var[i]);
+        }
+
         Console.ReadLine();
     }
 
@@ -24,9 +30,28 @@ class Program
                 utilities.fileCreation(FileName, chatName);
             }
         }
+
+        public class Read
+        {
+            public class Name
+            {
+                public static string[] All(string folder) {
+                    FileInfo[] files = new DirectoryInfo(folder).GetFiles("*.txt");
+
+                    string[] fileNames = new string[files.Length];
+
+                    for (int i = 0; i < fileNames.Length; i++) {
+                        fileNames[i] = files[i].Name;
+                    }
+
+                    return fileNames;
+                }
+            }
+        }
     }
 
-    public class utilities {
+    public class utilities
+    {
         public static string longerString(string a, string b) {
             if (a.Length > b.Length) {
                 return a;
@@ -70,9 +95,9 @@ class Program
                 Console.WriteLine(Ex.ToString());
             }
         }
-        public class encode {
-            public static string ByteArrayToHexString(string a)
-            {
+        public class encode
+        {
+            public static string ByteArrayToHexString(string a) {
                 byte[] ba = Encoding.ASCII.GetBytes(a);
                 StringBuilder hex = new StringBuilder(ba.Length * 2);
                 foreach (byte b in ba)
@@ -90,18 +115,18 @@ class Program
                 
                 int FileNamePointer = 0;
 
-                for (int charPointer = 0; charPointer < longerString.Length; charPointer++) {
+                for (int CharPointer = 0; CharPointer < longerString.Length; CharPointer++) {
 
-                    if (charPointer < CharA.Length) {
-                        returnVal[FileNamePointer] = CharA[charPointer];
+                    if (CharPointer < CharA.Length) {
+                        returnVal[FileNamePointer] = CharA[CharPointer];
                     } else {
                         returnVal[FileNamePointer] = '0';
                     }
 
                     FileNamePointer++;
 
-                    if (charPointer < CharB.Length) {
-                        returnVal[FileNamePointer] = CharB[charPointer];
+                    if (CharPointer < CharB.Length) {
+                        returnVal[FileNamePointer] = CharB[CharPointer];
                     } else {
                         returnVal[FileNamePointer] = '0';
                     }
@@ -110,6 +135,46 @@ class Program
                 }
                 
                 return new string(returnVal);
+            }
+
+            public static string[] UnravelStrings(string StringVar) {
+
+                if ((StringVar.Length%2) != 0) {
+                    StringVar = StringVar + "0";
+                }
+
+                char[] CharA = new char[StringVar.Length/2];
+                char[] CharB = new char[StringVar.Length/2];
+
+                char[] CharVar = StringVar.ToCharArray();
+
+                bool flipper = true;
+
+                int CharPointer = 0;
+
+                for (int FileNamePointer = 0; FileNamePointer < CharVar.Length; FileNamePointer++) {
+
+                    if (flipper) {
+
+                        CharA[CharPointer] = CharVar[FileNamePointer];
+
+                    } else {
+
+                        CharB[CharPointer] = CharVar[FileNamePointer];
+
+                    }
+
+                    flipper = !flipper;
+
+                    if (!flipper) {
+                        CharPointer++;
+                    }
+
+                }
+
+                string[] returnVal = { new string(CharA), new string(CharB) };
+                
+                return returnVal;
             }
         }
     }

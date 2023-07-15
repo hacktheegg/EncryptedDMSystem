@@ -6,12 +6,13 @@ class Program
 {
     static void Main(string[] args)
     {
-        Chat.Generate.Name("LongMessage", "Short", "ChatRoom");
+        Chat.Generate.Name("Long", "Short", "Length");
+        Chat.Generate.Name("username1One", "person2Fit", "People");
 
-        string[] var = Chat.Read.Name.All(@"C:\Users\user1\OneDrive\Desktop\Non-Desktop\Coding\C#\EncryptedDMSystem");
+        string[][] var = Chat.Read.Name.All(@"chats\");
 
         for (int i = 0; i < var.Length; i++) {
-            Console.WriteLine(var[i]);
+            Console.WriteLine(var[i][0] + "  |  " + var[i][1]);
         }
 
         Console.ReadLine();
@@ -21,13 +22,12 @@ class Program
     {
         public class Generate
         {
-            public static void Name(string Name1, string Name2, string chatName) {
-                string Name1Hex = utilities.encode.ByteArrayToHexString(Name1);
-                string Name2Hex = utilities.encode.ByteArrayToHexString(Name2);
+            public static void Name(string Name1, string Name2, string chatName = "") {
+                string Name1Hex = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name1));
+                string Name2Hex = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name2));
 
-                string FileName = utilities.encode.WeaveStrings(Name1Hex, Name2Hex);
-
-                utilities.fileCreation(FileName, chatName);
+                string FileName = Utilities.Encode.WeaveStrings(Name1Hex, Name2Hex);
+                Utilities.fileCreation(FileName, chatName);
             }
         }
 
@@ -35,22 +35,36 @@ class Program
         {
             public class Name
             {
-                public static string[] All(string folder) {
+                public static string[][] All(string folder) {
                     FileInfo[] files = new DirectoryInfo(folder).GetFiles("*.txt");
 
                     string[] fileNames = new string[files.Length];
 
                     for (int i = 0; i < fileNames.Length; i++) {
-                        fileNames[i] = files[i].Name;
+                        fileNames[i] = files[i].Name.Replace(".txt", "");
                     }
 
-                    return fileNames;
+                    string[][] returnValHex = new string[fileNames.Length][];
+
+                    for (int i = 0; i < fileNames.Length; i++) {
+                        returnValHex[i] = Utilities.Encode.UnravelStrings(fileNames[i]);
+                    }
+
+                    string[][] returnVal = new string[fileNames.Length][];
+                    
+                    for (int i = 0; i < fileNames.Length; i++) {
+                        returnVal[i] = new string[2];
+                        returnVal[i][0] = System.Text.Encoding.Default.GetString(Utilities.Encode.HexStringToByteArray(returnValHex[i][0]));
+                        returnVal[i][1] = System.Text.Encoding.Default.GetString(Utilities.Encode.HexStringToByteArray(returnValHex[i][1]));
+                    }
+
+                    return returnVal;
                 }
             }
         }
     }
 
-    public class utilities
+    public class Utilities
     {
         public static string longerString(string a, string b) {
             if (a.Length > b.Length) {
@@ -62,7 +76,7 @@ class Program
             }
         }
         public static void fileCreation(string ChatName, string internalHeading) {
-            string fileName = ChatName + ".txt";
+            string fileName = @"chats\"+ ChatName + ".txt";
 
             try
             {
@@ -95,21 +109,30 @@ class Program
                 Console.WriteLine(Ex.ToString());
             }
         }
-        public class encode
+        public class Encode
         {
-            public static string ByteArrayToHexString(string a) {
-                byte[] ba = Encoding.ASCII.GetBytes(a);
+            public static string ByteArrayToHexString(byte[] ba) {
                 StringBuilder hex = new StringBuilder(ba.Length * 2);
-                foreach (byte b in ba)
-                hex.AppendFormat("{0:x2}", b);
+                foreach (byte b in ba) hex.AppendFormat("{0:x2}", b);
 
                 return hex.ToString();
+            }
+            public static byte[] HexStringToByteArray(String hexString) {
+                int byteCount = hexString.Length / 2;
+                byte[] byteArray = new byte[byteCount];
+
+                for (int i = 0; i < byteCount; i++) {
+                    string byteValue = hexString.Substring(i * 2, 2);
+                    byteArray[i] = Convert.ToByte(byteValue, 16);
+                }
+
+                return byteArray;
             }
             public static string WeaveStrings(string StringA, string StringB) {
                 char[] CharA = StringA.ToCharArray();
                 char[] CharB = StringB.ToCharArray();
 
-                string longerString = utilities.longerString(CharA.ToString(), CharB.ToString());
+                string longerString = Utilities.longerString(new string(CharA), new string(CharB));
 
                 char[] returnVal = new char[longerString.Length*2];
                 
@@ -164,15 +187,15 @@ class Program
 
                     }
 
-                    flipper = !flipper;
-
                     if (!flipper) {
                         CharPointer++;
                     }
 
+                    flipper = !flipper;
+
                 }
 
-                string[] returnVal = { new string(CharA), new string(CharB) };
+                string[] returnVal = { new string(CharA).TrimEnd('0'), new string(CharB).TrimEnd('0') };
                 
                 return returnVal;
             }

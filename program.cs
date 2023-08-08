@@ -1,19 +1,33 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
+
+using ObjectList;
 
 class Program
 {
     static void Main(string[] args)
     {
-        Chat.Generate.Name("Long", "Short", "Length");
-        Chat.Generate.Name("username1One", "person2Fit", "People");
+        // example state //
+        Chat.Generate.Name("luigi", "wario", "enemies");
+        Chat.Generate.Name("mario", "luigi", "brothers");
+        Chat.Generate.Name("mario", "toad", "friends");
+        Chat.Generate.Name("luigi", "toad", "active users");
+        Chat.Generate.Name("waluigi", "waluigi", "waluigi");
+        // example state //
 
-        string[][] var = Chat.Read.Name.All(@"chats\");
+        string[] var = Chat.Read.Name.Allowed("luigi", @"chats\");
 
-        for (int i = 0; i < var.Length; i++) {
-            Console.WriteLine(var[i][0] + "  |  " + var[i][1]);
-        }
+        // for (int i = 0; i < var.Length; i++) {
+            // Console.WriteLine("Main(): " + var[i]); //[0] + "  |  " + var[i][1]);
+        // }
+
+        System.Threading.Thread.Sleep(5000);
+
+        Chat.Display.Messages(var);
+
+        Console.WriteLine(Chat.Read.Messages.FileName("luigi", var[0]));
 
         Console.ReadLine();
     }
@@ -27,7 +41,7 @@ class Program
                 string Name2Hex = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name2));
 
                 string FileName = Utilities.Encode.WeaveStrings(Name1Hex, Name2Hex);
-                Utilities.fileCreation(FileName, chatName);
+                Utilities.FileCreation(FileName, chatName);
             }
         }
 
@@ -60,13 +74,89 @@ class Program
 
                     return returnVal;
                 }
+                public static string[] Allowed(string username, string folder) {
+                    string[][] ChatNames = Chat.Read.Name.All(folder);
+
+                    string[] returnVal = new string[ChatNames.Length];
+
+                    int j = 0;
+
+                    int LengthVar = ChatNames.Length;
+
+                    for (int i = 0; i < ChatNames.Length; i++) {
+                        if (ChatNames[i].Contains(username)) {
+                            if (ChatNames[i][0] == username) {
+                                returnVal[j] = ChatNames[i][1];
+                            }else if (ChatNames[i][1] == username) {
+                                returnVal[j] = ChatNames[i][0];
+                            }
+                        } else {
+                            returnVal[j] = "{RESTRICTEDCHATROOM}";
+                            if (LengthVar > i) {
+                                LengthVar = i;
+                            }
+                        }
+                        j++;
+                    }
+
+                    string[] NewVal = new string[LengthVar];
+
+                    for (int i = 0; i < LengthVar; i++) {
+                        NewVal[i] = returnVal[i];
+                    }
+
+                    return NewVal;
+                }
+            }
+            public class Messages
+            {
+                public static string FileName(string CurrentUser, string TargetChat) {
+
+                    string HexCurrentUser = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(CurrentUser));
+                    string HexTargetChat = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(TargetChat));
+
+                    string ChatNameA = Utilities.Encode.WeaveStrings(HexCurrentUser, HexTargetChat);
+                    string ChatNameB = Utilities.Encode.WeaveStrings(HexTargetChat, HexCurrentUser);
+
+                    if (File.Exists(@"chats\" + ChatNameA + ".txt")) {
+                        return ChatNameA;
+                    } else if (File.Exists(@"chats\" + ChatNameB + ".txt")) {
+                        return ChatNameB;
+                    } else {
+                        Console.WriteLine("That Chat Does Not Exist");
+                        while (true) {
+                            Console.Read();
+                        }
+                    }
+
+                }
+            }
+            
+        }
+
+        public class Display
+        {
+            public static void Messages(string[] Content) {
+                Board Board = new Board(30, 30);
+
+                
+                Board = Square.Create(new Square(30,30,Tuple.Create(0,0)), Board);
+
+                // Console.WriteLine("Content.Length: " + Content.Length);
+
+                for (int i = 0; i < Content.Length; i++) {
+                    // Console.WriteLine("Content: " + Content[i] + "\ni: " + i);
+                    Board = Text.Create(new Text(Tuple.Create(2,2+i), Content[i]), Board);
+                }
+
+                Board.Print(Board.smoothBoard(Board));
             }
         }
     }
 
     public class Utilities
     {
-        public static string longerString(string a, string b) {
+        public static string LongerString(string a, string b) {
             if (a.Length > b.Length) {
                 return a;
             } else if (a.Length == b.Length) {
@@ -75,7 +165,7 @@ class Program
                 return b;
             }
         }
-        public static void fileCreation(string ChatName, string internalHeading) {
+        public static void FileCreation(string ChatName, string internalHeading) {
             string fileName = @"chats\"+ ChatName + ".txt";
 
             try
@@ -132,7 +222,7 @@ class Program
                 char[] CharA = StringA.ToCharArray();
                 char[] CharB = StringB.ToCharArray();
 
-                string longerString = Utilities.longerString(new string(CharA), new string(CharB));
+                string longerString = Utilities.LongerString(new string(CharA), new string(CharB));
 
                 char[] returnVal = new char[longerString.Length*2];
                 

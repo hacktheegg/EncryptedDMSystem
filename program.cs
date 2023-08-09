@@ -17,11 +17,14 @@ class Program
         Chat.Generate.Name("waluigi", "waluigi", "waluigi");
         // example state //
 
-        string[] var = Chat.Read.Name.Allowed("luigi", @"chats\");
 
-        // for (int i = 0; i < var.Length; i++) {
-            // Console.WriteLine("Main(): " + var[i]); //[0] + "  |  " + var[i][1]);
-        // }
+
+        User CurrentUser = new User("luigi", "Placeholder");
+
+
+
+
+        string[] var = Chat.Read.Name.Allowed(CurrentUser.Name, @"chats\");
 
         System.Threading.Thread.Sleep(5000);
 
@@ -30,6 +33,18 @@ class Program
         Console.WriteLine(Chat.Read.Messages.FileName("luigi", var[0]));
 
         Console.ReadLine();
+    }
+
+    public class User
+    {
+        public string Name;
+        public string Password;
+        public string LoginName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+
+        public User(string NameInput, string PasswordInput) {
+            Name = NameInput;
+            Password = PasswordInput;
+        }
     }
 
     public class Chat
@@ -290,5 +305,9 @@ class Program
                 return returnVal;
             }
         }
+    }
+    public class Encrypt
+    {
+
     }
 }

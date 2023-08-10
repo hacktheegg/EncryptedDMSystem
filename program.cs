@@ -5,6 +5,16 @@ using System.Text;
 
 using ObjectList;
 
+/*
+
+
+    Current Script to Impliment:
+        algorithm:  PrimeNo(LoginName) = PrimeNo(Password+UserName)*PublicKey
+            ratio:  1:5
+
+
+*/
+
 class Program
 {
     static void Main(string[] args)
@@ -30,7 +40,7 @@ class Program
 
         Chat.Display.Messages(var);
 
-        Console.WriteLine(Chat.Read.Messages.FileName("luigi", var[0]));
+        Console.WriteLine(Chat.Read.Messages.FileName(CurrentUser.Name, var[0]));
 
         Console.ReadLine();
     }
@@ -44,6 +54,19 @@ class Program
         public User(string NameInput, string PasswordInput) {
             Name = NameInput;
             Password = PasswordInput;
+        }
+
+        public static string Generate(User GeneratingUser) {
+            bool Complete = false;
+            bool FindNextPrime = true;
+            int NoPrime = 0;
+
+            while (!Complete) {
+                if () {
+                    
+                }
+            }
+
         }
     }
 

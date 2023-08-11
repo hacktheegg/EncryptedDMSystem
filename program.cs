@@ -4,13 +4,26 @@ using System.Linq;
 using System.Text;
 
 using ObjectList;
+using EncryptionDecryptionSet;
 
 /*
 
 
     Current Script to Impliment:
-        algorithm:  PrimeNo(LoginName) = PrimeNo(Password+UserName)*PublicKey
-            ratio:  1:5
+        // Create an instance of the EncryptionService
+        EncryptionService encryptionService = new EncryptionService();
+
+        // Get the public key
+        string publicKey = encryptionService.GetPublicKey();
+
+        // Encrypt a message
+        string message = "Hello, World!";
+        byte[] encryptedMessage = encryptionService.EncryptMessage(message, publicKey);
+
+        // Decrypt the message
+        string decryptedMessage = encryptionService.DecryptMessage(encryptedMessage);
+
+        Console.WriteLine(decryptedMessage); // Output: Hello, World!
 
 
 */

@@ -1,84 +1,48 @@
+using System;
 using System.Security.Cryptography;
-using System.IO;
+using System.Security.Principal;
+using System.Text;
 
-public class EncryptionClass
+namespace EncryptionDecryptionSet
 {
-    private RSAParameters publicKeyA, publicKeyB;
-    private RSAParameters privateKey;
-
-    public EncryptionClass(RSAParameters publicKeyA, RSAParameters publicKeyB, RSAParameters privateKey)
+    public class EncryptionService
     {
-        this.publicKeyA = publicKeyA;
-        this.publicKeyB = publicKeyB;
-        this.privateKey = privateKey;
-    }
+        private RSACryptoServiceProvider rsa;
 
-    public byte[] GenerateSymmetricKey()
-    {
-        byte[] symmetricKey;
-        using (Aes aes = Aes.Create())
+        public EncryptionService()
         {
-            aes.KeySize = 256; // Key size is 256 bits
-            aes.GenerateKey();
-            symmetricKey = aes.Key;
+            // Get the current Windows identity
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+
+            // Generate a private-public key pair based on the Windows identity
+            CspParameters cspParams = new CspParameters();
+            cspParams.KeyContainerName = identity.User.Value;
+            rsa = new RSACryptoServiceProvider(cspParams);
         }
-        return symmetricKey;
-    }
 
-    public byte[] EncryptSymmetricKey(byte[] symmetricKey, RSAParameters publicKey)
-    {
-        byte[] encryptedKey;
-        using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+        public string GetPublicKey()
         {
-            rsa.ImportParameters(publicKey);
-            encryptedKey = rsa.Encrypt(symmetricKey, false);
+            // Get the public key
+            return rsa.ToXmlString(false);
         }
-        return encryptedKey;
-    }
 
-    public byte[] EncryptMessage(byte[] message, byte[] symmetricKey)
-    {
-        byte[] encryptedMessage;
-        using (Aes aes = Aes.Create())
+        public byte[] EncryptMessage(string message, string publicKey)
         {
-            aes.Key = symmetricKey;
-            ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-            using (MemoryStream ms = new MemoryStream())
-            using (CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+            byte[] encryptedMessage;
+
+            using (RSACryptoServiceProvider rsaEncrypt = new RSACryptoServiceProvider())
             {
-                cs.Write(message, 0, message.Length);
-                cs.Close();
-                encryptedMessage = ms.ToArray();
+                rsaEncrypt.FromXmlString(publicKey);
+                encryptedMessage = rsaEncrypt.Encrypt(Encoding.UTF8.GetBytes(message), true);
             }
-        }
-        return encryptedMessage;
-    }
 
-    public byte[] DecryptSymmetricKey(byte[] encryptedKey, RSAParameters privateKey)
-    {
-        byte[] decryptedKey;
-        using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
-        {
-            rsa.ImportParameters(privateKey);
-            decryptedKey = rsa.Decrypt(encryptedKey, false);
+            return encryptedMessage;
         }
-        return decryptedKey;
-    }
 
-    public byte[] DecryptMessage(byte[] encryptedMessage, byte[] decryptedKey)
-    {
-        byte[] decryptedMessage;
-        using (Aes aes = Aes.Create())
+        public string DecryptMessage(byte[] encryptedMessage)
         {
-            aes.Key = decryptedKey;
-            ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-            using (MemoryStream ms = new MemoryStream(encryptedMessage))
-            using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
-            {
-                decryptedMessage = new byte[encryptedMessage.Length];
-                var bytesRead = cs.Read(decryptedMessage, 0, decryptedMessage.Length);
-            }
+            byte[] decryptedMessage = rsa.Decrypt(encryptedMessage, true);
+            return Encoding.UTF8.GetString(decryptedMessage);
         }
-        return decryptedMessage;
     }
 }

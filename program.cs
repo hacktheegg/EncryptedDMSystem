@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Data.SQLite;
 
 using ObjectList;
 using EncryptionDecryptionSet;
@@ -33,17 +34,22 @@ class Program
     static void Main(string[] args)
     {
         // example state //
-        Chat.Generate.Name("luigi", "wario", "enemies");
-        Chat.Generate.Name("mario", "luigi", "brothers");
-        Chat.Generate.Name("mario", "toad", "friends");
-        Chat.Generate.Name("luigi", "toad", "active users");
-        Chat.Generate.Name("waluigi", "waluigi", "waluigi");
+        Chat.Generate.Room("luigi", "wario", "enemies");
+        Chat.Generate.Room("mario", "luigi", "brothers");
+        Chat.Generate.Room("mario", "toad", "friends");
+        Chat.Generate.Room("luigi", "toad", "active users");
+        Chat.Generate.Room("waluigi", "waluigi", "waluigi");
         // example state //
 
 
 
-        User CurrentUser = new User("luigi", "Placeholder");
+        User CurrentUser = new User("luigi");
 
+        Chat.Generate.User(CurrentUser);
+
+
+
+        // Console.WriteLine("SELECT COUNT(*) from UserTable where Username = 'Peter'");
 
 
 
@@ -57,28 +63,37 @@ class Program
 
         Console.ReadLine();
     }
+    public static void Test() {
+        string connectionString = "Data Source=UserList.db;Version=3;";
+        SQLiteConnection connection = new SQLiteConnection(connectionString);
+        connection.Open();
+
+        string sqlCommand = "SELECT COUNT(*) from Main where Username = 'luigi'";
+        SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
+
+        command = new SQLiteCommand(sqlCommand, connection);
+
+        command.ExecuteNonQuery();
+
+        bool isAllExist = (int)(new SqlCommand("SELECT COUNT(*) from Main where Username = 'luigi'").ExecuteScalar()) == 1;
+    }
 
     public class User
     {
+        public static EncryptionService encryptionService = new EncryptionService();
         public string Name;
-        public string Password;
         public string LoginName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+        public string PublicKey = encryptionService.GetPublicKey();
 
-        public User(string NameInput, string PasswordInput) {
+        public User(string NameInput) {
             Name = NameInput;
-            Password = PasswordInput;
+
+            if () {
+                Chat.Generate.User(CurrentUser);
+            }
         }
 
-        public static string Generate(User GeneratingUser) {
-            bool Complete = false;
-            bool FindNextPrime = true;
-            int NoPrime = 0;
-
-            while (!Complete) {
-                if () {
-                    
-                }
-            }
+        public static bool Exists(string User) {
 
         }
     }
@@ -87,12 +102,39 @@ class Program
     {
         public class Generate
         {
-            public static void Name(string Name1, string Name2, string chatName = "") {
+            public static void Room(string Name1, string Name2, string chatName = "") {
                 string Name1Hex = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name1));
                 string Name2Hex = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name2));
 
                 string FileName = Utilities.Encode.WeaveStrings(Name1Hex, Name2Hex);
                 Utilities.FileCreation(FileName, chatName);
+            }
+            public static void Database() {
+                if (!System.IO.File.Exists("UserList.db"))
+                {
+                    string connectionString = @"Data Source=UserList.db;Version=3;";
+                    SQLiteConnection connection = new SQLiteConnection(connectionString);
+                    connection.Open();
+
+                    string query = "CREATE TABLE Main (Username TEXT, PublicKey INTEGER)";
+                    SQLiteCommand command = new SQLiteCommand(query, connection);
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+            public static void User(User CurrentUser) {
+                Chat.Generate.Database();
+
+                string connectionString = "Data Source=UserList.db;Version=3;";
+                SQLiteConnection connection = new SQLiteConnection(connectionString);
+                connection.Open();
+
+                string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+CurrentUser.Name+"', '"+CurrentUser.PublicKey+"');";
+                SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
+
+                command = new SQLiteCommand(sqlCommand, connection);
+
+                command.ExecuteNonQuery();
             }
         }
 
@@ -341,9 +383,5 @@ class Program
                 return returnVal;
             }
         }
-    }
-    public class Encrypt
-    {
-
     }
 }

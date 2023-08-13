@@ -53,6 +53,10 @@ class Program
 
 
 
+        Console.WriteLine(Test());
+
+
+
         string[] var = Chat.Read.Name.Allowed(CurrentUser.Name, @"chats\");
 
         System.Threading.Thread.Sleep(5000);
@@ -63,7 +67,7 @@ class Program
 
         Console.ReadLine();
     }
-    public static void Test() {
+    public static bool Test() {
         string connectionString = "Data Source=UserList.db;Version=3;";
         SQLiteConnection connection = new SQLiteConnection(connectionString);
         connection.Open();
@@ -76,6 +80,7 @@ class Program
         command.ExecuteNonQuery();
 
         bool isAllExist = (int)(new SqlCommand("SELECT COUNT(*) from Main where Username = 'luigi'").ExecuteScalar()) == 1;
+        return isAllExist;
     }
 
     public class User

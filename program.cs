@@ -51,10 +51,11 @@ class Program
 
         // Console.WriteLine("SELECT COUNT(*) from UserTable where Username = 'Peter'");
 
-
+        Console.WriteLine("1");
 
         Console.WriteLine(Test());
 
+        Console.WriteLine("2");
 
 
         string[] var = Chat.Read.Name.Allowed(CurrentUser.Name, @"chats\");
@@ -72,14 +73,16 @@ class Program
         SQLiteConnection connection = new SQLiteConnection(connectionString);
         connection.Open();
 
-        string sqlCommand = "SELECT COUNT(*) from Main where Username = 'luigi'";
+        string sqlCommand = "SELECT COUNT(*) from Main where Username = 'wario'";
         SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
 
         command = new SQLiteCommand(sqlCommand, connection);
 
         command.ExecuteNonQuery();
 
-        bool isAllExist = (int)(new SqlCommand("SELECT COUNT(*) from Main where Username = 'luigi'").ExecuteScalar()) == 1;
+        SQLiteCommand countCommand = new SQLiteCommand("SELECT COUNT(*) from Main where Username = 'wario'", connection);
+        bool isAllExist = Convert.ToInt32(countCommand.ExecuteScalar()) >= 1;
+
         return isAllExist;
     }
 
@@ -93,14 +96,14 @@ class Program
         public User(string NameInput) {
             Name = NameInput;
 
-            if () {
-                Chat.Generate.User(CurrentUser);
-            }
+            //if () {
+            //    Chat.Generate.User(CurrentUser);
+            //}
         }
 
-        public static bool Exists(string User) {
+        //public static bool Exists(string User) {
 
-        }
+        //}
     }
 
     public class Chat

@@ -11,20 +11,21 @@ using EncryptionDecryptionSet;
 
 
     Current Script to Impliment:
-        // Create an instance of the EncryptionService
-        EncryptionService encryptionService = new EncryptionService();
+        // Generate a key pair for Alice
+        KeyGenerator keyGenerator = new KeyGenerator();
+        RSAParameters aliceKeys = keyGenerator.GenerateKeyPair("Alice", "password123");
 
-        // Get the public key
-        string publicKey = encryptionService.GetPublicKey();
+        // Alice wants to send a message to Bob
+        string message = "Hello, Bob!";
 
-        // Encrypt a message
-        string message = "Hello, World!";
-        byte[] encryptedMessage = encryptionService.EncryptMessage(message, publicKey);
+        // Alice encrypts the message with Bob's public key
+        byte[] encryptedMessage = Encrypt(message, aliceKeys);
 
-        // Decrypt the message
-        string decryptedMessage = encryptionService.DecryptMessage(encryptedMessage);
+        // Bob receives the message and decrypts it with his private key
+        string decryptedMessage = Decrypt(encryptedMessage, aliceKeys);
 
-        Console.WriteLine(decryptedMessage); // Output: Hello, World!
+        // Print the decrypted message
+        Console.WriteLine(decryptedMessage);
 
 
 */
@@ -51,12 +52,6 @@ class Program
 
         // Console.WriteLine("SELECT COUNT(*) from UserTable where Username = 'Peter'");
 
-        Console.WriteLine("1");
-
-        Console.WriteLine(Test());
-
-        Console.WriteLine("2");
-
 
         string[] var = Chat.Read.Name.Allowed(CurrentUser.Name, @"chats\");
 
@@ -67,23 +62,6 @@ class Program
         Console.WriteLine(Chat.Read.Messages.FileName(CurrentUser.Name, var[0]));
 
         Console.ReadLine();
-    }
-    public static bool Test() {
-        string connectionString = "Data Source=UserList.db;Version=3;";
-        SQLiteConnection connection = new SQLiteConnection(connectionString);
-        connection.Open();
-
-        string sqlCommand = "SELECT COUNT(*) from Main where Username = 'wario'";
-        SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
-
-        command = new SQLiteCommand(sqlCommand, connection);
-
-        command.ExecuteNonQuery();
-
-        SQLiteCommand countCommand = new SQLiteCommand("SELECT COUNT(*) from Main where Username = 'wario'", connection);
-        bool isAllExist = Convert.ToInt32(countCommand.ExecuteScalar()) >= 1;
-
-        return isAllExist;
     }
 
     public class User
@@ -207,6 +185,23 @@ class Program
                     }
 
                     return NewVal;
+                }
+                public static bool Test(string Value) {
+                    string connectionString = "Data Source=UserList.db;Version=3;";
+                    SQLiteConnection connection = new SQLiteConnection(connectionString);
+                    connection.Open();
+
+                    string sqlCommand = "SELECT COUNT(*) from Main where Username = '"+Value+"'";
+                    SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
+
+                    command = new SQLiteCommand(sqlCommand, connection);
+
+                    command.ExecuteNonQuery();
+
+                    SQLiteCommand countCommand = new SQLiteCommand("SELECT COUNT(*) from Main where Username = '"+Value+"'", connection);
+                    bool isAllExist = Convert.ToInt32(countCommand.ExecuteScalar()) >= 1;
+
+                    return isAllExist;
                 }
             }
             public class Messages

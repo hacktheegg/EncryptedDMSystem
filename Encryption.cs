@@ -1,48 +1,45 @@
 using System;
 using System.Security.Cryptography;
-using System.Security.Principal;
 using System.Text;
 
-namespace EncryptionDecryptionSet
+public class KeyGenerator
 {
-    public class EncryptionService
+    public RSAParameters GenerateKeyPair(string loginName, string password)
     {
-        private RSACryptoServiceProvider rsa;
+        // Combine the loginName and password into a single string
+        string combined = loginName + password;
 
-        public EncryptionService()
+        // Hash the combined string to generate a seed
+        SHA256 sha256 = SHA256Managed.Create();
+        byte[] seed = sha256.ComputeHash(Encoding.UTF8.GetBytes(combined));
+
+        // Use the seed to initialize a pseudorandom number generator
+        var rng = new RNGCryptoServiceProvider(seed);
+
+        // Generate a key pair using the pseudorandom number generator
+        var rsa = new RSACryptoServiceProvider(2048, new CspParameters() { KeyNumber = (int)KeyNumber.Exchange, Flags = CspProviderFlags.UseMachineKeyStore, ProviderName = "Microsoft Strong Cryptographic Provider", RandomNumberGenerator = rng });
+
+        // Return the key pair
+        return rsa.ExportParameters(true);
+    }
+
+    public static byte[] Encrypt(string data, RSAParameters publicKey)
+    {
+        var byteArray = Encoding.ASCII.GetBytes(data);
+        using (var rsa = new RSACryptoServiceProvider())
         {
-            // Get the current Windows identity
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
-
-            // Generate a private-public key pair based on the Windows identity
-            CspParameters cspParams = new CspParameters();
-            cspParams.KeyContainerName = identity.User.Value;
-            rsa = new RSACryptoServiceProvider(cspParams);
+            rsa.ImportParameters(publicKey);
+            return rsa.Encrypt(byteArray, false);
         }
+    }
 
-        public string GetPublicKey()
+    public static string Decrypt(byte[] encryptedData, RSAParameters privateKey)
+    {
+        using (var rsa = new RSACryptoServiceProvider())
         {
-            // Get the public key
-            return rsa.ToXmlString(false);
-        }
-
-        public byte[] EncryptMessage(string message, string publicKey)
-        {
-            byte[] encryptedMessage;
-
-            using (RSACryptoServiceProvider rsaEncrypt = new RSACryptoServiceProvider())
-            {
-                rsaEncrypt.FromXmlString(publicKey);
-                encryptedMessage = rsaEncrypt.Encrypt(Encoding.UTF8.GetBytes(message), true);
-            }
-
-            return encryptedMessage;
-        }
-
-        public string DecryptMessage(byte[] encryptedMessage)
-        {
-            byte[] decryptedMessage = rsa.Decrypt(encryptedMessage, true);
-            return Encoding.UTF8.GetString(decryptedMessage);
+            rsa.ImportParameters(privateKey);
+            var decryptedByteArray = rsa.Decrypt(encryptedData, false);
+            return Encoding.ASCII.GetString(decryptedByteArray);
         }
     }
 }

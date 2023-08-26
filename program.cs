@@ -7,28 +7,7 @@ using System.Data.SQLite;
 using ObjectList;
 using EncryptionDecryptionSet;
 
-/*
 
-
-    Current Script to Impliment:
-        // Generate a key pair for Alice
-        KeyGenerator keyGenerator = new KeyGenerator();
-        RSAParameters aliceKeys = keyGenerator.GenerateKeyPair("Alice", "password123");
-
-        // Alice wants to send a message to Bob
-        string message = "Hello, Bob!";
-
-        // Alice encrypts the message with Bob's public key
-        byte[] encryptedMessage = Encrypt(message, aliceKeys);
-
-        // Bob receives the message and decrypts it with his private key
-        string decryptedMessage = Decrypt(encryptedMessage, aliceKeys);
-
-        // Print the decrypted message
-        Console.WriteLine(decryptedMessage);
-
-
-*/
 
 class Program
 {
@@ -44,7 +23,7 @@ class Program
 
 
 
-        User CurrentUser = new User("luigi");
+        User CurrentUser = new User("luigi", "Password");
 
         Chat.Generate.User(CurrentUser);
 
@@ -53,26 +32,29 @@ class Program
         // Console.WriteLine("SELECT COUNT(*) from UserTable where Username = 'Peter'");
 
 
-        string[] var = Chat.Read.Name.Allowed(CurrentUser.Name, @"chats\");
+        string[] var = Chat.Read.Name.Allowed(CurrentUser.Username, @"chats\");
 
-        System.Threading.Thread.Sleep(5000);
+        //System.Threading.Thread.Sleep(5000);
 
         Chat.Display.Messages(var);
 
-        Console.WriteLine(Chat.Read.Messages.FileName(CurrentUser.Name, var[0]));
+        //Console.WriteLine(Chat.Read.Messages.FileName(CurrentUser.Name, var[0]));
 
         Console.ReadLine();
     }
 
     public class User
     {
-        public static EncryptionService encryptionService = new EncryptionService();
-        public string Name;
+        public string Username;
+        public string Password;
         public string LoginName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-        public string PublicKey = encryptionService.GetPublicKey();
+        public byte[] Keys;
 
-        public User(string NameInput) {
-            Name = NameInput;
+        public User(string UsernameInput, string PasswordInput) {
+            Username = UsernameInput;
+            Password = PasswordInput;
+
+            Keys = RSACryptography.GenerateKeyPair(LoginName, Password);
 
             //if () {
             //    Chat.Generate.User(CurrentUser);
@@ -115,7 +97,7 @@ class Program
                 SQLiteConnection connection = new SQLiteConnection(connectionString);
                 connection.Open();
 
-                string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+CurrentUser.Name+"', '"+CurrentUser.PublicKey+"');";
+                string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+CurrentUser.Username+"', '"+CurrentUser.PublicKey+"');";
                 SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
 
                 command = new SQLiteCommand(sqlCommand, connection);

@@ -2,44 +2,82 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 
-public class KeyGenerator
+
+
+namespace EncryptionDecryptionSet
 {
-    public RSAParameters GenerateKeyPair(string loginName, string password)
+    public static class RSACryptography
     {
-        // Combine the loginName and password into a single string
-        string combined = loginName + password;
-
-        // Hash the combined string to generate a seed
-        SHA256 sha256 = SHA256Managed.Create();
-        byte[] seed = sha256.ComputeHash(Encoding.UTF8.GetBytes(combined));
-
-        // Use the seed to initialize a pseudorandom number generator
-        var rng = new RNGCryptoServiceProvider(seed);
-
-        // Generate a key pair using the pseudorandom number generator
-        var rsa = new RSACryptoServiceProvider(2048, new CspParameters() { KeyNumber = (int)KeyNumber.Exchange, Flags = CspProviderFlags.UseMachineKeyStore, ProviderName = "Microsoft Strong Cryptographic Provider", RandomNumberGenerator = rng });
-
-        // Return the key pair
-        return rsa.ExportParameters(true);
-    }
-
-    public static byte[] Encrypt(string data, RSAParameters publicKey)
-    {
-        var byteArray = Encoding.ASCII.GetBytes(data);
-        using (var rsa = new RSACryptoServiceProvider())
+        // Function to generate a 32-byte key from the loginName and password
+        public static byte[] GenerateKeyPair(string loginName, string password)
         {
-            rsa.ImportParameters(publicKey);
-            return rsa.Encrypt(byteArray, false);
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                // Combining the loginName and password to generate a unique key for each user
+                return sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(loginName + password));
+            }
         }
-    }
 
-    public static string Decrypt(byte[] encryptedData, RSAParameters privateKey)
-    {
-        using (var rsa = new RSACryptoServiceProvider())
+        // Function to encrypt data
+        public static byte[] Encrypt(byte[] data, byte[] key)
         {
-            rsa.ImportParameters(privateKey);
-            var decryptedByteArray = rsa.Decrypt(encryptedData, false);
-            return Encoding.ASCII.GetString(decryptedByteArray);
+            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+            {
+                try
+                {
+                    // Import the RSA Key information
+                    rsa.ImportParameters(ConvertToRSAParameters(key));
+
+                    // Encrypt the data and return the result
+                    return rsa.Encrypt(data, false);
+                }
+                finally
+                {
+                    // Always clear securable data from memory when you're done with it
+                    rsa.PersistKeyInCsp = false;
+                }
+            }
+        }
+
+        // Function to decrypt data
+        public static string Decrypt(byte[] data, byte[] key)
+        {
+            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+            {
+                try
+                {
+                    // Import the RSA Key information
+                    rsa.ImportParameters(ConvertToRSAParameters(key));
+
+                    // Decrypt the data and return the result
+                    return Encoding.UTF8.GetString(rsa.Decrypt(data, false));
+                }
+                finally
+                {
+                    // Always clear securable data from memory when you're done with it
+                    rsa.PersistKeyInCsp = false;
+                }
+            }
+        }
+
+        // Convert a key to RSAParameters
+        private static RSAParameters ConvertToRSAParameters(byte[] key)
+        {
+            // Create a new RSAParameters structure to receive the key 
+            RSAParameters RSAKeyInfo = new RSAParameters();
+
+            // Set RSAKeyInfo to the public key values: 
+            RSAKeyInfo.Modulus = key;
+            RSAKeyInfo.Exponent = new byte[] { 01, 00, 01, 00 };  // default for 65537 in .NET
+
+            // Import key parameters into RSA 
+            return RSAKeyInfo;
+        }
+
+        public static RSAParameters GetPublicKey(string loginName, string password)
+        {
+            byte[] key = GenerateKeyPair(loginName, password);
+            return ConvertToRSAParameters(key);
         }
     }
 }

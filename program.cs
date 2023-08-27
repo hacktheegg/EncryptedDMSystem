@@ -14,6 +14,13 @@ class Program
     static void Main(string[] args)
     {
         // example state //
+        Chat.Generate.Database();
+
+        Chat.User("mario", "plumber", "mario");
+        Chat.User("luigi", "player2", "luigi");
+        Chat.User("toad", "fungi", "toad");
+        Chat.User("waluigi", "waluigi", "waluigi");
+
         Chat.Generate.Room("luigi", "wario", "enemies");
         Chat.Generate.Room("mario", "luigi", "brothers");
         Chat.Generate.Room("mario", "toad", "friends");
@@ -47,23 +54,41 @@ class Program
     {
         public string Username;
         public string Password;
-        public string LoginName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-        public byte[] Keys;
+        public string LoginName;
+        public string PublicKey;
+        public string PrivateKey;
 
-        public User(string UsernameInput, string PasswordInput) {
+        public User(string UsernameInput, string PasswordInput,
+        string LoginNameInput = System.Security.Principal.WindowsIdentity.GetCurrent().Name) {
+
             Username = UsernameInput;
             Password = PasswordInput;
+            LoginName = LoginNameInput;
+            PublicKey = new DeterministicRSA("username", "password").PublicKey;
+            PrivateKey = new DeterministicRSA("username", "password").PrivateKey;
 
-            Keys = RSACryptography.GenerateKeyPair(LoginName, Password);
-
-            //if () {
-            //    Chat.Generate.User(CurrentUser);
-            //}
+            if (!User.Exists(Username)) {
+                Chat.Generate.User(this);
+            }
         }
 
-        //public static bool Exists(string User) {
+        public static bool Exists(string Value) {
+            string connectionString = "Data Source=UserList.db;Version=3;";
+            SQLiteConnection connection = new SQLiteConnection(connectionString);
+            connection.Open();
 
-        //}
+            string sqlCommand = "SELECT COUNT(*) from Main where Username = '"+Value+"'";
+            SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
+
+            command = new SQLiteCommand(sqlCommand, connection);
+
+            command.ExecuteNonQuery();
+
+            SQLiteCommand countCommand = new SQLiteCommand("SELECT COUNT(*) from Main where Username = '"+Value+"'", connection);
+            bool isAllExist = Convert.ToInt32(countCommand.ExecuteScalar()) >= 1;
+
+            return isAllExist;
+        }
     }
 
     public class Chat
@@ -167,23 +192,6 @@ class Program
                     }
 
                     return NewVal;
-                }
-                public static bool Test(string Value) {
-                    string connectionString = "Data Source=UserList.db;Version=3;";
-                    SQLiteConnection connection = new SQLiteConnection(connectionString);
-                    connection.Open();
-
-                    string sqlCommand = "SELECT COUNT(*) from Main where Username = '"+Value+"'";
-                    SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
-
-                    command = new SQLiteCommand(sqlCommand, connection);
-
-                    command.ExecuteNonQuery();
-
-                    SQLiteCommand countCommand = new SQLiteCommand("SELECT COUNT(*) from Main where Username = '"+Value+"'", connection);
-                    bool isAllExist = Convert.ToInt32(countCommand.ExecuteScalar()) >= 1;
-
-                    return isAllExist;
                 }
             }
             public class Messages

@@ -11,17 +11,19 @@ encryption method
 
 
 //################################//
-|| This is annoying to do. There  ||
-|| isn't a way to (safely) do     ||
-|| Public/Private Key encryption  ||
-|| where both sides can decrypt   ||
-|| the results. I will complete   ||
-|| this to the end, i won't let   ||
-|| another one of my projects     ||
-|| start and then fail at it's    ||
-|| full potential.                ||
+|| I've got it to write proper    ||
+|| public key values to the data- ||
+|| -base. The next thing to do is ||
+|| rearrange all the function and ||
+|| classes as some functions are  ||
+|| more suited for other spots in ||
+|| the code. (this is due to my   ||
+|| lack of pre-planning)          ||
 ||                                ||
-|| From now on I will have a .txt ||
-|| specifically for updates and   ||
-|| self-evaluation.               ||
+|| A lot of stuff could go in     ||
+|| Program.User for ease of use,  ||
+|| and I could put WeaveString()  ||
+|| in Encryption.cs, as that      ||
+|| would ascoiate it with other   ||
+|| security functions/classes     ||
 //################################//

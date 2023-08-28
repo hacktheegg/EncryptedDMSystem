@@ -1,62 +1,54 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Crypto.Parameters;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 
-public class DeterministicRSA
+namespace Security
 {
-    private string publicKey;
-    private string privateKey;
-
-    public DeterministicRSA(string username, string password)
+    public class DeterministicRSA
     {
-        using (var sha256 = SHA256.Create())
-        {
-            var seed = sha256.ComputeHash(Encoding.UTF8.GetBytes(username + password));
-            var rng = new DeterministicRandomNumberGenerator(seed);
+        private string publicKey;
+        private string privateKey;
 
-            using (var rsa = new RSACryptoServiceProvider(2048, rng))
+        public DeterministicRSA(string username, string password)
+        {
+            using (var sha256 = SHA256.Create())
             {
-                publicKey = Convert.ToBase64String(StructToBytes(rsa.ExportParameters(false)));
-                privateKey = Convert.ToBase64String(StructToBytes(rsa.ExportParameters(true)));
+                var seed = sha256.ComputeHash(Encoding.UTF8.GetBytes(username + password));
+                var rng = SecureRandom.GetInstance("SHA1PRNG");
+                rng.SetSeed(seed);
+                
+                RsaKeyPairGenerator generator = new RsaKeyPairGenerator();
+                generator.Init(new KeyGenerationParameters(rng, 2048));
+
+                var pair = generator.GenerateKeyPair();
+
+                //convert to string
+                TextWriter textWriter = new StringWriter();
+                PemWriter pemWriter = new PemWriter(textWriter);
+                pemWriter.WriteObject(pair.Public);
+                publicKey = textWriter.ToString();
+                
+                textWriter = new StringWriter();
+                pemWriter = new PemWriter(textWriter);
+                pemWriter.WriteObject(pair.Private);
+                privateKey = textWriter.ToString();
             }
         }
-    }
 
-    public string PublicKey
-    {
-        get { return publicKey; }
-    }
-
-    public string PrivateKey
-    {
-        get { return privateKey; }
-    }
-
-    private byte[] StructToBytes(RSAParameters param)
-    {
-        BinaryFormatter bf = new BinaryFormatter();
-        using (var ms = new MemoryStream())
+        public string PublicKey
         {
-            bf.Serialize(ms, param);
-            return ms.ToArray();
+            get { return publicKey; }
         }
-    }
-}
 
-public class DeterministicRandomNumberGenerator : RandomNumberGenerator
-{
-    private Random random;
-
-    public DeterministicRandomNumberGenerator(byte[] seed)
-    {
-        var seedInt = BitConverter.ToInt32(seed, 0);
-        random = new Random(seedInt);
-    }
-
-    public override void GetBytes(byte[] data)
-    {
-        random.NextBytes(data);
+        public string PrivateKey
+        {
+            get { return privateKey; }
+        }
     }
 }

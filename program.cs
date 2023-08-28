@@ -5,7 +5,7 @@ using System.Text;
 using System.Data.SQLite;
 
 using ObjectList;
-using EncryptionDecryptionSet;
+using Security;
 
 
 
@@ -16,10 +16,10 @@ class Program
         // example state //
         Chat.Generate.Database();
 
-        Chat.User("mario", "plumber", "mario");
-        Chat.User("luigi", "player2", "luigi");
-        Chat.User("toad", "fungi", "toad");
-        Chat.User("waluigi", "waluigi", "waluigi");
+        User TEMPUSER = new User("mario", "plumber", "mario");
+        TEMPUSER = new User("luigi", "player2", "luigi");
+        TEMPUSER = new User("toad", "fungi", "toad");
+        TEMPUSER = new User("waluigi", "waluigi", "waluigi");
 
         Chat.Generate.Room("luigi", "wario", "enemies");
         Chat.Generate.Room("mario", "luigi", "brothers");
@@ -59,11 +59,15 @@ class Program
         public string PrivateKey;
 
         public User(string UsernameInput, string PasswordInput,
-        string LoginNameInput = System.Security.Principal.WindowsIdentity.GetCurrent().Name) {
+        string LoginNameInput = "TEMPVALUE") {
 
             Username = UsernameInput;
             Password = PasswordInput;
-            LoginName = LoginNameInput;
+
+            LoginName = LoginNameInput == "TEMPVALUE" ?
+                System.Security.Principal.WindowsIdentity.GetCurrent().Name :
+                LoginNameInput;
+
             PublicKey = new DeterministicRSA("username", "password").PublicKey;
             PrivateKey = new DeterministicRSA("username", "password").PrivateKey;
 
@@ -257,8 +261,10 @@ class Program
             try
             {
                 // Check if file already exists. If yes, delete it.
-                if (File.Exists(fileName))
-                {
+                if (!Directory.Exists("chats")) {
+                    Directory.CreateDirectory("chats");
+                }
+                if (File.Exists(fileName)) {
                     File.Delete(fileName);
                 }
                 

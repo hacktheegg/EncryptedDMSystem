@@ -14,36 +14,33 @@ class Program
     static void Main(string[] args)
     {
         // example state //
-        Chat.Generate.Database();
+        User.Generate.Database();
 
         User TEMPUSER = new User("mario", "plumber", "mario");
-        TEMPUSER = new User("luigi", "player2", "luigi");
-        TEMPUSER = new User("toad", "fungi", "toad");
-        TEMPUSER = new User("waluigi", "waluigi", "waluigi");
+        TEMPUSER.Generate.Chat("luigi");
+        TEMPUSER.Generate.Chat("toad");
 
-        Chat.Generate.Room("luigi", "wario", "enemies");
-        Chat.Generate.Room("mario", "luigi", "brothers");
-        Chat.Generate.Room("mario", "toad", "friends");
-        Chat.Generate.Room("luigi", "toad", "active users");
-        Chat.Generate.Room("waluigi", "waluigi", "waluigi");
+        TEMPUSER = new User("luigi", "player2", "luigi");
+        TEMPUSER.Generate.Chat("wario");
+        TEMPUSER.Generate.Chat("toad");
+
+        TEMPUSER = new User("toad", "fungi", "toad");
+
+        TEMPUSER = new User("waluigi", "waluigi", "waluigi");
+        TEMPUSER.Generate.Chat("waluigi");
         // example state //
 
 
 
-        User CurrentUser = new User("luigi", "Password");
-
-        Chat.Generate.User(CurrentUser);
+        User CurrentUser = new User("PlaceHolder", "Password");
 
 
 
-        // Console.WriteLine("SELECT COUNT(*) from UserTable where Username = 'Peter'");
-
-
-        string[] var = Chat.Read.Name.Allowed(CurrentUser.Username, @"chats\");
+        string[] var = User.Read.Chats.Allowed(@"chats\");
 
         //System.Threading.Thread.Sleep(5000);
 
-        Chat.Display.Messages(var);
+        User.Display.Messages(var);
 
         //Console.WriteLine(Chat.Read.Messages.FileName(CurrentUser.Name, var[0]));
 
@@ -59,7 +56,7 @@ class Program
         public string PrivateKey;
 
         public User(string UsernameInput, string PasswordInput,
-        string LoginNameInput = "TEMPVALUE") {
+            string LoginNameInput = "TEMPVALUE") {
 
             Username = UsernameInput;
             Password = PasswordInput;
@@ -68,13 +65,26 @@ class Program
                 System.Security.Principal.WindowsIdentity.GetCurrent().Name :
                 LoginNameInput;
 
-            PublicKey = new DeterministicRSA("username", "password").PublicKey;
-            PrivateKey = new DeterministicRSA("username", "password").PrivateKey;
+            PublicKey = new DeterministicRSA(this.LoginName, this.Password).PublicKey;
+            PrivateKey = new DeterministicRSA(this.LoginName, this.Password).PrivateKey;
 
             if (!User.Exists(Username)) {
-                Chat.Generate.User(this);
+                Program.User.Generate.Database();
+
+                string connectionString = "Data Source=UserList.db;Version=3;";
+                SQLiteConnection connection = new SQLiteConnection(connectionString);
+                connection.Open();
+
+                string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+this.Username+"', '"+this.PublicKey+"');";
+                SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
+
+                command = new SQLiteCommand(sqlCommand, connection);
+
+                command.ExecuteNonQuery();
             }
         }
+
+
 
         public static bool Exists(string Value) {
             string connectionString = "Data Source=UserList.db;Version=3;";
@@ -93,19 +103,22 @@ class Program
 
             return isAllExist;
         }
-    }
 
-    public class Chat
-    {
+
+
         public class Generate
         {
-            public static void Room(string Name1, string Name2, string chatName = "") {
-                string Name1Hex = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name1));
-                string Name2Hex = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name2));
+
+            public void Chat(string Name) {
+                string Name1Hex = Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(this.Username));
+                string Name2Hex = Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name));
 
                 string FileName = Utilities.Encode.WeaveStrings(Name1Hex, Name2Hex);
-                Utilities.FileCreation(FileName, chatName);
+                Utilities.FileCreation(FileName);
             }
+
+
+
             public static void Database() {
                 if (!System.IO.File.Exists("UserList.db"))
                 {
@@ -119,26 +132,104 @@ class Program
                     connection.Close();
                 }
             }
-            public static void User(User CurrentUser) {
-                Chat.Generate.Database();
-
-                string connectionString = "Data Source=UserList.db;Version=3;";
-                SQLiteConnection connection = new SQLiteConnection(connectionString);
-                connection.Open();
-
-                string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+CurrentUser.Username+"', '"+CurrentUser.PublicKey+"');";
-                SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
-
-                command = new SQLiteCommand(sqlCommand, connection);
-
-                command.ExecuteNonQuery();
-            }
         }
+
+
 
         public class Read
         {
-            public class Name
+            public class Chats
             {
+                public string[] Allowed(string folder) {
+                    string[][] ChatNames = Admin.Read.Chats.All(folder);
+
+                    string[] returnVal = new string[ChatNames.Length];
+
+                    int j = 0;
+
+                    int LengthVar = ChatNames.Length;
+
+                    for (int i = 0; i < ChatNames.Length; i++) {
+                        if (ChatNames[i].Contains(this.Username)) {
+                            if (ChatNames[i][0] == this.Username) {
+                                returnVal[j] = ChatNames[i][1];
+                            }else if (ChatNames[i][1] == this.Username) {
+                                returnVal[j] = ChatNames[i][0];
+                            }
+                        } else {
+                            returnVal[j] = "{RESTRICTEDCHATROOM}";
+                            if (LengthVar > i) {
+                                LengthVar = i;
+                            }
+                        }
+                        j++;
+                    }
+
+                    string[] NewVal = new string[LengthVar];
+
+                    for (int i = 0; i < LengthVar; i++) {
+                        NewVal[i] = returnVal[i];
+                    }
+
+                    return NewVal;
+                }
+            }
+            public class Messages
+            {
+                public string FileName(string TargetChat) {
+
+                    string HexCurrentUser = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(this));
+                    string HexTargetChat = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(TargetChat));
+
+                    string ChatNameA = Utilities.Encode.WeaveStrings(HexCurrentUser, HexTargetChat);
+                    string ChatNameB = Utilities.Encode.WeaveStrings(HexTargetChat, HexCurrentUser);
+
+                    if (File.Exists(@"chats\" + ChatNameA + ".txt")) {
+                        return ChatNameA;
+                    } else if (File.Exists(@"chats\" + ChatNameB + ".txt")) {
+                        return ChatNameB;
+                    } else {
+                        Console.WriteLine("That Chat Does Not Exist");
+                        while (true) {
+                            Console.Read();
+                        }
+                    }
+
+                }
+            } 
+        }
+
+        public class Display
+        {
+            public static void Messages(string[] Content) {
+                Board Board = new Board(30, 30);
+
+                
+                Board = Square.Create(new Square(30,30,Tuple.Create(0,0)), Board);
+
+                // Console.WriteLine("Content.Length: " + Content.Length);
+
+                for (int i = 0; i < Content.Length; i++) {
+                    // Console.WriteLine("Content: " + Content[i] + "\ni: " + i);
+                    Board = Text.Create(new Text(Tuple.Create(2,2+i), Content[i]), Board);
+                }
+
+                Board.Print(Board.smoothBoard(Board));
+            }
+        }
+    }
+
+
+
+    class Admin
+    {
+
+        class Read
+        {
+
+            class Chats
+            {
+
                 public static string[][] All(string folder) {
                     FileInfo[] files = new DirectoryInfo(folder).GetFiles("*.txt");
 
@@ -164,222 +255,6 @@ class Program
 
                     return returnVal;
                 }
-                public static string[] Allowed(string username, string folder) {
-                    string[][] ChatNames = Chat.Read.Name.All(folder);
-
-                    string[] returnVal = new string[ChatNames.Length];
-
-                    int j = 0;
-
-                    int LengthVar = ChatNames.Length;
-
-                    for (int i = 0; i < ChatNames.Length; i++) {
-                        if (ChatNames[i].Contains(username)) {
-                            if (ChatNames[i][0] == username) {
-                                returnVal[j] = ChatNames[i][1];
-                            }else if (ChatNames[i][1] == username) {
-                                returnVal[j] = ChatNames[i][0];
-                            }
-                        } else {
-                            returnVal[j] = "{RESTRICTEDCHATROOM}";
-                            if (LengthVar > i) {
-                                LengthVar = i;
-                            }
-                        }
-                        j++;
-                    }
-
-                    string[] NewVal = new string[LengthVar];
-
-                    for (int i = 0; i < LengthVar; i++) {
-                        NewVal[i] = returnVal[i];
-                    }
-
-                    return NewVal;
-                }
-            }
-            public class Messages
-            {
-                public static string FileName(string CurrentUser, string TargetChat) {
-
-                    string HexCurrentUser = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(CurrentUser));
-                    string HexTargetChat = Utilities.Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(TargetChat));
-
-                    string ChatNameA = Utilities.Encode.WeaveStrings(HexCurrentUser, HexTargetChat);
-                    string ChatNameB = Utilities.Encode.WeaveStrings(HexTargetChat, HexCurrentUser);
-
-                    if (File.Exists(@"chats\" + ChatNameA + ".txt")) {
-                        return ChatNameA;
-                    } else if (File.Exists(@"chats\" + ChatNameB + ".txt")) {
-                        return ChatNameB;
-                    } else {
-                        Console.WriteLine("That Chat Does Not Exist");
-                        while (true) {
-                            Console.Read();
-                        }
-                    }
-
-                }
-            }
-            
-        }
-
-        public class Display
-        {
-            public static void Messages(string[] Content) {
-                Board Board = new Board(30, 30);
-
-                
-                Board = Square.Create(new Square(30,30,Tuple.Create(0,0)), Board);
-
-                // Console.WriteLine("Content.Length: " + Content.Length);
-
-                for (int i = 0; i < Content.Length; i++) {
-                    // Console.WriteLine("Content: " + Content[i] + "\ni: " + i);
-                    Board = Text.Create(new Text(Tuple.Create(2,2+i), Content[i]), Board);
-                }
-
-                Board.Print(Board.smoothBoard(Board));
-            }
-        }
-    }
-
-    public class Utilities
-    {
-        public static string LongerString(string a, string b) {
-            if (a.Length > b.Length) {
-                return a;
-            } else if (a.Length == b.Length) {
-                return a;
-            } else {
-                return b;
-            }
-        }
-        public static void FileCreation(string ChatName, string internalHeading) {
-            string fileName = @"chats\"+ ChatName + ".txt";
-
-            try
-            {
-                // Check if file already exists. If yes, delete it.
-                if (!Directory.Exists("chats")) {
-                    Directory.CreateDirectory("chats");
-                }
-                if (File.Exists(fileName)) {
-                    File.Delete(fileName);
-                }
-                
-                // Create a new file
-                using (FileStream fs = File.Create(fileName))
-                {
-                    // Add some text to file
-                    Byte[] title = new UTF8Encoding(true).GetBytes(internalHeading);
-                    fs.Write(title, 0, title.Length);
-                }
-                
-                // Open the stream and read it back.
-                using (StreamReader sr = File.OpenText(fileName))
-                {
-                    string s = "";
-                    while ((s = sr.ReadLine()) != null)
-                    {
-                        //Console.WriteLine(s);
-                    }
-                }
-            }
-            catch (Exception Ex)
-            {
-                Console.WriteLine(Ex.ToString());
-            }
-        }
-        public class Encode
-        {
-            public static string ByteArrayToHexString(byte[] ba) {
-                StringBuilder hex = new StringBuilder(ba.Length * 2);
-                foreach (byte b in ba) hex.AppendFormat("{0:x2}", b);
-
-                return hex.ToString();
-            }
-            public static byte[] HexStringToByteArray(String hexString) {
-                int byteCount = hexString.Length / 2;
-                byte[] byteArray = new byte[byteCount];
-
-                for (int i = 0; i < byteCount; i++) {
-                    string byteValue = hexString.Substring(i * 2, 2);
-                    byteArray[i] = Convert.ToByte(byteValue, 16);
-                }
-
-                return byteArray;
-            }
-            public static string WeaveStrings(string StringA, string StringB) {
-                char[] CharA = StringA.ToCharArray();
-                char[] CharB = StringB.ToCharArray();
-
-                string longerString = Utilities.LongerString(new string(CharA), new string(CharB));
-
-                char[] returnVal = new char[longerString.Length*2];
-                
-                int FileNamePointer = 0;
-
-                for (int CharPointer = 0; CharPointer < longerString.Length; CharPointer++) {
-
-                    if (CharPointer < CharA.Length) {
-                        returnVal[FileNamePointer] = CharA[CharPointer];
-                    } else {
-                        returnVal[FileNamePointer] = '0';
-                    }
-
-                    FileNamePointer++;
-
-                    if (CharPointer < CharB.Length) {
-                        returnVal[FileNamePointer] = CharB[CharPointer];
-                    } else {
-                        returnVal[FileNamePointer] = '0';
-                    }
-
-                    FileNamePointer++;
-                }
-                
-                return new string(returnVal);
-            }
-
-            public static string[] UnravelStrings(string StringVar) {
-
-                if ((StringVar.Length%2) != 0) {
-                    StringVar = StringVar + "0";
-                }
-
-                char[] CharA = new char[StringVar.Length/2];
-                char[] CharB = new char[StringVar.Length/2];
-
-                char[] CharVar = StringVar.ToCharArray();
-
-                bool flipper = true;
-
-                int CharPointer = 0;
-
-                for (int FileNamePointer = 0; FileNamePointer < CharVar.Length; FileNamePointer++) {
-
-                    if (flipper) {
-
-                        CharA[CharPointer] = CharVar[FileNamePointer];
-
-                    } else {
-
-                        CharB[CharPointer] = CharVar[FileNamePointer];
-
-                    }
-
-                    if (!flipper) {
-                        CharPointer++;
-                    }
-
-                    flipper = !flipper;
-
-                }
-
-                string[] returnVal = { new string(CharA).TrimEnd('0'), new string(CharB).TrimEnd('0') };
-                
-                return returnVal;
             }
         }
     }

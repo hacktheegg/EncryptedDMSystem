@@ -10,20 +10,23 @@ encryption method
 
 
 
-//################################//
-|| I've got it to write proper    ||
-|| public key values to the data- ||
-|| -base. The next thing to do is ||
-|| rearrange all the function and ||
-|| classes as some functions are  ||
-|| more suited for other spots in ||
-|| the code. (this is due to my   ||
-|| lack of pre-planning)          ||
-||                                ||
-|| A lot of stuff could go in     ||
-|| Program.User for ease of use,  ||
-|| and I could put WeaveString()  ||
-|| in Encryption.cs, as that      ||
-|| would ascoiate it with other   ||
-|| security functions/classes     ||
-//################################//
+//################################################################//
+|| Ok, after the mess that was                                    ||
+|| refactorising, I have (almost)                                 ||
+|| got it back to a working state.                                ||
+|| The only thing remaining to do                                 ||
+|| to get it back to it's original                                ||
+|| working state, is getting it                                   ||
+|| to see the chats again; 'cause                                 ||
+|| for some reason, it has decided                                ||
+|| to print the box but not the                                   ||
+|| chats.                                                         ||
+||                                                                ||
+|| Overall, everything is well                                    ||
+|| and coding class is tomorrow.                                  ||
+||                                                                ||
+|| I will prioritise combining                                    ||
+|| the different Encryption                                       ||
+|| methods then.                                                  ||
+||        (box also needs bigger)   (it now is)                   ||
+//################################################################//

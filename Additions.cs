@@ -77,7 +77,7 @@ namespace Security
             char[] CharA = StringA.ToCharArray();
             char[] CharB = StringB.ToCharArray();
 
-            string longerString = Utilities.LongerString(new string(CharA), new string(CharB));
+            string longerString = DMSExtras.DMSExtras.LongerString(new string(CharA), new string(CharB));
 
             char[] returnVal = new char[longerString.Length*2];
             
@@ -145,10 +145,12 @@ namespace Security
             return returnVal;
         }
     }
+}
 
 
-
-    private class Utilities
+namespace DMSExtras
+{
+    public class DMSExtras
     {
         public static string LongerString(string a, string b) {
             if (a.Length > b.Length) {

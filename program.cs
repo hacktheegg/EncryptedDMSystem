@@ -17,35 +17,110 @@ class Program
         // example state //
         User.Generate_Database();
 
-        User TEMPUSER = new User("mario", "plumber", "mario");
-        TEMPUSER.Generate_Chat("luigi");
-        TEMPUSER.Generate_Chat("toad");
+        new User("mario", "plumber", "mario").Generate();
+        new User("luigi", "player2").Generate();
+        new User("toad", "fungi", "toad").Generate();
+        new User("waluigi", "waluigi", "waluigi").Generate();
 
-        TEMPUSER = new User("luigi", "player2", "luigi");
-        TEMPUSER.Generate_Chat("wario");
-        TEMPUSER.Generate_Chat("toad");
 
-        TEMPUSER = new User("toad", "fungi", "toad");
+        User TempUser = new User("mario", "plumber", "mario");
+        TempUser.Generate_Chat("luigi");
+        TempUser.Generate_Chat("toad");
 
-        TEMPUSER = new User("waluigi", "waluigi", "waluigi");
-        TEMPUSER.Generate_Chat("waluigi");
+        TempUser = new User("luigi", "player2");
+        TempUser.Generate_Chat("toad");
+
+        TempUser = new User("toad", "fungi", "toad");
+
+        TempUser = new User("waluigi", "waluigi", "waluigi");
+        TempUser.Generate_Chat("waluigi");
         // example state //
 
 
+        Start:
+        Console.Clear();
 
-        User CurrentUser = new User("PlaceHolder", "Password");
+        Board Board = new Board(30, 30);
+        Board = Square.Create(new Square(30,30,Tuple.Create(0,0)), Board);
 
+        Menu Menu = new Menu(2, Tuple.Create(2,2));
+        Menu.Values = new string[2]{"New", "Login (Username)"};
+
+        Tuple<int, string> Result = Menu.Activate(Board);
+
+        if (Result.Item1 == 0) {
+            Console.WriteLine("Fresh Account");
+            System.Threading.Thread.Sleep(5000);
+            //Fresh Account
+
+            goto Start;
+        } else if (!User.Exists(Result.Item2.ToLower())) {
+            Console.WriteLine("Not Valid Username");
+            System.Threading.Thread.Sleep(5000);
+            //Not Valid Account Username
+
+            goto Start;
+        }
+
+        string TempString = Result.Item2.ToLower();
+
+        Menu = new Menu(1, Tuple.Create(2,2));
+        Menu.Values = new string[1]{"Password (Do Not Share)"};
+
+        Result = Menu.Activate(Board);
+
+
+
+        User CurrentUser = new User(TempString, Result.Item2.ToLower());
+
+
+        if (!(User.Exists(TempString) && User.PublicKey_Exists(CurrentUser.PublicKey))) {
+            Console.WriteLine("Not The Correct Password");
+            System.Threading.Thread.Sleep(5000);
+            goto Start;
+        }
 
 
         string[] var = CurrentUser.Read_Chats_Allowed(@"chats\");
 
-        //System.Threading.Thread.Sleep(5000);
+        Menu = new Menu(var.Length, Tuple.Create(2,2));
+        Menu.Values = var;
 
-        User.Display.Messages(var);
+        Menu.Activate(Board);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //User CurrentUser = new User("luigi", "player2", "luigi");
+
+
+
+        //string[] var = CurrentUser.Read_Chats_Allowed(@"chats\");
+
+            // //System.Threading.Thread.Sleep(5000);
+
+        //User.Display.Messages(var);
 
         //Console.WriteLine(Chat.Read.Messages.FileName(CurrentUser.Name, var[0]));
 
-        Console.ReadLine();
+        while (true) 
+        {
+            Console.WriteLine("this is the end");
+            Console.ReadLine();
+        }
     }
 
     public class User
@@ -68,21 +143,23 @@ class Program
 
             PublicKey = new DeterministicRSA(this.LoginName, this.Password).PublicKey;
             PrivateKey = new DeterministicRSA(this.LoginName, this.Password).PrivateKey;
+        }
 
-            if (!User.Exists(Username)) {
-                User.Generate_Database();
 
-                string connectionString = "Data Source=UserList.db;Version=3;";
-                SQLiteConnection connection = new SQLiteConnection(connectionString);
-                connection.Open();
 
-                string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+this.Username+"', '"+this.PublicKey+"');";
-                SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
+        public void Generate() {
+            User.Generate_Database();
 
-                command = new SQLiteCommand(sqlCommand, connection);
+            string connectionString = "Data Source=UserList.db;Version=3;";
+            SQLiteConnection connection = new SQLiteConnection(connectionString);
+            connection.Open();
 
-                command.ExecuteNonQuery();
-            }
+            string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+this.Username+"', '"+this.PublicKey+"');";
+            SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
+
+            command = new SQLiteCommand(sqlCommand, connection);
+
+            command.ExecuteNonQuery();
         }
 
 
@@ -100,6 +177,24 @@ class Program
             command.ExecuteNonQuery();
 
             SQLiteCommand countCommand = new SQLiteCommand("SELECT COUNT(*) from Main where Username = '"+Value+"'", connection);
+            bool isAllExist = Convert.ToInt32(countCommand.ExecuteScalar()) >= 1;
+
+            return isAllExist;
+        }
+
+        public static bool PublicKey_Exists(string Value) {
+            string connectionString = "Data Source=UserList.db;Version=3;";
+            SQLiteConnection connection = new SQLiteConnection(connectionString);
+            connection.Open();
+
+            string sqlCommand = "SELECT COUNT(*) from Main where PublicKey = '"+Value+"'";
+            SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
+
+            command = new SQLiteCommand(sqlCommand, connection);
+
+            command.ExecuteNonQuery();
+
+            SQLiteCommand countCommand = new SQLiteCommand("SELECT COUNT(*) from Main where PublicKey = '"+Value+"'", connection);
             bool isAllExist = Convert.ToInt32(countCommand.ExecuteScalar()) >= 1;
 
             return isAllExist;

@@ -10,6 +10,40 @@ using System.IO;
 
 namespace Security
 {
+    public class DeterministicSecureRandom : SecureRandom
+    {
+        private SHA256 sha256 = SHA256.Create();
+        private byte[] seed;
+
+        public DeterministicSecureRandom(byte[] seed)
+        {
+            this.seed = seed;
+        }
+
+        public override void NextBytes(byte[] buffer)
+        {
+            int offset = 0;
+            while (offset < buffer.Length)
+            {
+                // Generate a new hash value based on the seed.
+                byte[] hashValue = sha256.ComputeHash(seed);
+
+                // Determine the number of bytes to copy in this round.
+                int bytesToCopy = Math.Min(hashValue.Length, buffer.Length - offset);
+
+                // Copy the bytes from the hash value to the buffer.
+                Array.Copy(hashValue, 0, buffer, offset, bytesToCopy);
+
+                // Update the seed with the new hash value for the next round.
+                seed = hashValue;
+
+                // Move the offset for the next round.
+                offset += bytesToCopy;
+            }
+        }
+
+    }
+
     public class DeterministicRSA
     {
         private string publicKey;
@@ -20,9 +54,8 @@ namespace Security
             using (var sha256 = SHA256.Create())
             {
                 var seed = sha256.ComputeHash(Encoding.UTF8.GetBytes(username + password));
-                var rng = SecureRandom.GetInstance("SHA1PRNG");
-                rng.SetSeed(seed);
-                
+                var rng = new DeterministicSecureRandom(seed);
+
                 RsaKeyPairGenerator generator = new RsaKeyPairGenerator();
                 generator.Init(new KeyGenerationParameters(rng, 2048));
 

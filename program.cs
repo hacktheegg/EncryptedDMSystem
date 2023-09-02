@@ -14,6 +14,8 @@ class Program
 {
     static void Main(string[] args)
     {
+        //System.Threading.Thread.Sleep(5000);
+
         // example state //
         User.Generate_Database();
 
@@ -40,15 +42,16 @@ class Program
         Start:
         Console.Clear();
 
-        Board Board = new Board(30, 30);
-        Board = Square.Create(new Square(30,30,Tuple.Create(0,0)), Board);
+        //Board Board = User.Display.New(20,20);
+        Board Board = new Board(20, 20);
+        Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
 
         Menu Menu = new Menu(2, Tuple.Create(2,2));
-        Menu.Values = new string[2]{"New", "Login (Username)"};
+        Menu.Values = new string[2]{"Login (Username)", "New"};
 
         Tuple<int, string> Result = Menu.Activate(Board);
 
-        if (Result.Item1 == 0) {
+        if (Result.Item1 == 1) {
             Console.WriteLine("Fresh Account");
             System.Threading.Thread.Sleep(5000);
             //Fresh Account
@@ -63,6 +66,10 @@ class Program
         }
 
         string TempString = Result.Item2.ToLower();
+
+        //Board = User.Display.New(20,20);
+        Board = new Board(20, 20);
+        Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
 
         Menu = new Menu(1, Tuple.Create(2,2));
         Menu.Values = new string[1]{"Password (Do Not Share)"};
@@ -118,8 +125,8 @@ class Program
 
         while (true) 
         {
-            Console.WriteLine("this is the end");
-            Console.ReadLine();
+            Console.Write("the end is never");
+            Console.ReadKey(false);
         }
     }
 
@@ -284,10 +291,10 @@ class Program
         public class Display
         {
             public static void Messages(string[] Content) {
-                Board Board = new Board(30, 30);
+                Board Board = new Board(20, 20);
 
                 
-                Board = Square.Create(new Square(30,30,Tuple.Create(0,0)), Board);
+                Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
 
                 // Console.WriteLine("Content.Length: " + Content.Length);
 
@@ -297,6 +304,11 @@ class Program
                 }
 
                 Board.Print(Board.smoothBoard(Board));
+            }
+            public static Board New(int Width, int Height) {
+                Board Board = new Board(Width, Height);
+                Board = Square.Create(new Square(Width,Height,Tuple.Create(0,0)), Board);
+                return Board;
             }
         }
     }

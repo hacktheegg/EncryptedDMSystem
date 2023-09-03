@@ -76,7 +76,8 @@ class Program
 
         Result = Menu.Activate(Board);
 
-
+        Board = new Board(20, 20);
+        Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
 
         User CurrentUser = new User(TempString, Result.Item2.ToLower());
 
@@ -93,7 +94,7 @@ class Program
         Menu = new Menu(var.Length, Tuple.Create(2,2));
         Menu.Values = var;
 
-        Menu.Activate(Board);
+        Result = Menu.Activate(Board);
 
 
 
@@ -125,6 +126,7 @@ class Program
 
         while (true) 
         {
+            Console.WriteLine(User.Read_Messages_Chat());
             Console.Write("the end is never");
             Console.ReadKey(false);
         }
@@ -155,6 +157,9 @@ class Program
 
 
         public void Generate() {
+            if (User.Exists(this.Username) || User.PublicKey_Exists(this.PublicKey)) {
+                return;
+            }
             User.Generate_Database();
 
             string connectionString = "Data Source=UserList.db;Version=3;";
@@ -286,6 +291,12 @@ class Program
                     Console.Read();
                 }
             }
+        }
+        public static string Read_Messages_Chat() {
+            return SymmetricEncryption.GenerateKey();
+        }
+        public static void Write_Messages_Chat() {
+
         }
 
         public class Display

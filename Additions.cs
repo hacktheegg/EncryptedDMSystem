@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Org.BouncyCastle.Crypto;
@@ -6,7 +7,6 @@ using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Crypto.Parameters;
-using System.IO;
 
 namespace Security
 {
@@ -82,6 +82,70 @@ namespace Security
         public string PrivateKey
         {
             get { return privateKey; }
+        }
+    }
+
+
+
+    public class SymmetricEncryption
+    {
+        public static string GenerateKey()
+        {
+            using (Aes aes = Aes.Create())
+            {
+                aes.GenerateKey();
+                return Convert.ToBase64String(aes.Key);
+            }
+        }
+
+        public string EncryptString(string key, string plainText)
+        {
+            byte[] encrypted;
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = Convert.FromBase64String(key);
+                aes.GenerateIV();
+
+                ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+
+                using (MemoryStream msEncrypt = new MemoryStream())
+                {
+                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
+                        {
+                            swEncrypt.Write(plainText);
+                        }
+                        encrypted = msEncrypt.ToArray();
+                    }
+                }
+            }
+            return Convert.ToBase64String(encrypted);
+        }
+
+        public string DecryptString(string key, string cipherText)
+        {
+            string plaintext = null;
+
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = Convert.FromBase64String(key);
+                aes.GenerateIV();
+
+                ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+
+                using (MemoryStream msDecrypt = new MemoryStream(Convert.FromBase64String(cipherText)))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+                            plaintext = srDecrypt.ReadToEnd();
+                        }
+                    }
+                }
+            }
+            return plaintext;
         }
     }
 

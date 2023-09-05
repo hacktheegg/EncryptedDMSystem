@@ -74,14 +74,39 @@ namespace Security
             }
         }
 
-        public string PublicKey
+        public string Public
         {
             get { return publicKey; }
         }
 
-        public string PrivateKey
+        public string Private
         {
             get { return privateKey; }
+        }
+
+        public string Encrypt(string data, string recipientPublicKey)
+        {
+            var cipher = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
+            cipher.Init(true, new PemReader(new StringReader(recipientPublicKey)).ReadObject() as AsymmetricKeyParameter);
+
+            var dataToEncrypt = Encoding.UTF8.GetBytes(data);
+            var encryptedData = cipher.DoFinal(dataToEncrypt);
+
+            return Convert.ToBase64String(encryptedData);
+        }
+
+        public string Decrypt(string data, string recipientPrivateKey)
+        {
+            try {
+                var cipher = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
+                var keyPair = (AsymmetricCipherKeyPair)new PemReader(new StringReader(recipientPrivateKey)).ReadObject();
+                cipher.Init(false, keyPair.Private);
+
+                var dataToDecrypt = Convert.FromBase64String(data);
+                var decryptedData = cipher.DoFinal(dataToDecrypt);
+
+                return Encoding.UTF8.GetString(decryptedData);   
+            }
         }
     }
 

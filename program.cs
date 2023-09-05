@@ -20,7 +20,7 @@ class Program
         User.Generate_Database();
 
         new User("mario", "plumber", "mario").Generate();
-        new User("luigi", "player2").Generate();
+        new User("luigi", "player2", "luigi").Generate();
         new User("toad", "fungi", "toad").Generate();
         new User("waluigi", "waluigi", "waluigi").Generate();
 
@@ -29,7 +29,7 @@ class Program
         TempUser.Generate_Chat("luigi");
         TempUser.Generate_Chat("toad");
 
-        TempUser = new User("luigi", "player2");
+        TempUser = new User("luigi", "player2", "luigi");
         TempUser.Generate_Chat("toad");
 
         TempUser = new User("toad", "fungi", "toad");
@@ -79,10 +79,10 @@ class Program
         Board = new Board(20, 20);
         Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
 
-        User CurrentUser = new User(TempString, Result.Item2.ToLower());
+        User CurrentUser = new User(TempString, Result.Item2.ToLower(), "luigi");
 
 
-        if (!(User.Exists(TempString) && User.PublicKey_Exists(CurrentUser.PublicKey))) {
+        if (!(User.Exists(TempString) && User.Exists_PublicKey(CurrentUser.Key.Public))) {
             Console.WriteLine("Not The Correct Password");
             System.Threading.Thread.Sleep(5000);
             goto Start;
@@ -96,9 +96,17 @@ class Program
 
         Result = Menu.Activate(Board);
 
+        string SelectedChat = Menu.Values[Result.Item1];
 
+        SelectedChat = CurrentUser.Read_Messages_FileName(SelectedChat);
 
+        string[] ChatContent = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
 
+        string[] DecryptedChatContent = CurrentUser.Read_Messages_Chat(ChatContent);
+
+        User.Display.Content(DecryptedChatContent);
+
+        //User.Read_Messages_Chat();
 
 
 
@@ -126,7 +134,6 @@ class Program
 
         while (true) 
         {
-            Console.WriteLine(User.Read_Messages_Chat());
             Console.Write("the end is never");
             Console.ReadKey(false);
         }
@@ -137,8 +144,7 @@ class Program
         public string Username;
         public string Password;
         public string LoginName;
-        public string PublicKey;
-        public string PrivateKey;
+        public DeterministicRSA Key;
 
         public User(string UsernameInput, string PasswordInput,
             string LoginNameInput = "TEMPVALUE") {
@@ -150,28 +156,7 @@ class Program
                 System.Security.Principal.WindowsIdentity.GetCurrent().Name :
                 LoginNameInput;
 
-            PublicKey = new DeterministicRSA(this.LoginName, this.Password).PublicKey;
-            PrivateKey = new DeterministicRSA(this.LoginName, this.Password).PrivateKey;
-        }
-
-
-
-        public void Generate() {
-            if (User.Exists(this.Username) || User.PublicKey_Exists(this.PublicKey)) {
-                return;
-            }
-            User.Generate_Database();
-
-            string connectionString = "Data Source=UserList.db;Version=3;";
-            SQLiteConnection connection = new SQLiteConnection(connectionString);
-            connection.Open();
-
-            string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+this.Username+"', '"+this.PublicKey+"');";
-            SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
-
-            command = new SQLiteCommand(sqlCommand, connection);
-
-            command.ExecuteNonQuery();
+            Key = new DeterministicRSA(this.LoginName, this.Password);
         }
 
 
@@ -193,50 +178,77 @@ class Program
 
             return isAllExist;
         }
+            public static bool Exists_PublicKey(string Value) {
+                string connectionString = "Data Source=UserList.db;Version=3;";
+                SQLiteConnection connection = new SQLiteConnection(connectionString);
+                connection.Open();
 
-        public static bool PublicKey_Exists(string Value) {
+                string sqlCommand = "SELECT COUNT(*) from Main where PublicKey = '"+Value+"'";
+                SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
+
+                command = new SQLiteCommand(sqlCommand, connection);
+
+                command.ExecuteNonQuery();
+
+                SQLiteCommand countCommand = new SQLiteCommand("SELECT COUNT(*) from Main where PublicKey = '"+Value+"'", connection);
+                bool isAllExist = Convert.ToInt32(countCommand.ExecuteScalar()) >= 1;
+
+                return isAllExist;
+            }
+
+
+
+        public void Generate() {
+            if (User.Exists(this.Username) || User.Exists_PublicKey(this.Key.Public)) {
+                return;
+            }
+            User.Generate_Database();
+
             string connectionString = "Data Source=UserList.db;Version=3;";
             SQLiteConnection connection = new SQLiteConnection(connectionString);
             connection.Open();
 
-            string sqlCommand = "SELECT COUNT(*) from Main where PublicKey = '"+Value+"'";
+            string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+this.Username+"', '"+this.Key.Public+"');";
             SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
 
             command = new SQLiteCommand(sqlCommand, connection);
 
             command.ExecuteNonQuery();
-
-            SQLiteCommand countCommand = new SQLiteCommand("SELECT COUNT(*) from Main where PublicKey = '"+Value+"'", connection);
-            bool isAllExist = Convert.ToInt32(countCommand.ExecuteScalar()) >= 1;
-
-            return isAllExist;
         }
+            public void Generate_Chat(string Name) {
+                string Name1Hex = Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(this.Username));
+                string Name2Hex = Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name));
 
+                string FileName = Encode.WeaveStrings(Name1Hex, Name2Hex);
+                DMSExtras.DMSExtras.FileCreation(FileName);
 
+                string SymmetricKey = SymmetricEncryption.GenerateKey();
 
-        public void Generate_Chat(string Name) {
-            string Name1Hex = Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(this.Username));
-            string Name2Hex = Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name));
-
-            string FileName = Encode.WeaveStrings(Name1Hex, Name2Hex);
-            DMSExtras.DMSExtras.FileCreation(FileName);
-        }
-
-
-
-        public static void Generate_Database() {
-            if (!System.IO.File.Exists("UserList.db"))
-            {
-                string connectionString = @"Data Source=UserList.db;Version=3;";
-                SQLiteConnection connection = new SQLiteConnection(connectionString);
-                connection.Open();
-
-                string query = "CREATE TABLE Main (Username TEXT, PublicKey INTEGER)";
-                SQLiteCommand command = new SQLiteCommand(query, connection);
-                command.ExecuteNonQuery();
-                connection.Close();
+                using (StreamWriter writer = new StreamWriter(@"chats\"+FileName+".txt"))
+                {
+                    writer.WriteLine(
+                        this.Key.Encrypt("thisTheKey: "+ SymmetricKey,
+                        User.Read_User_PublicKey(Name)
+                    ));
+                    writer.WriteLine(
+                        this.Key.Encrypt("thisTheKey: "+ SymmetricKey,
+                        User.Read_User_PublicKey(this.Username)
+                    ));
+                }
             }
-        }
+            public static void Generate_Database() {
+                if (!System.IO.File.Exists("UserList.db"))
+                {
+                    string connectionString = @"Data Source=UserList.db;Version=3;";
+                    SQLiteConnection connection = new SQLiteConnection(connectionString);
+                    connection.Open();
+
+                    string query = "CREATE TABLE Main (Username TEXT, PublicKey TEXT)";
+                    SQLiteCommand command = new SQLiteCommand(query, connection);
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
 
 
 
@@ -292,16 +304,49 @@ class Program
                 }
             }
         }
-        public static string Read_Messages_Chat() {
-            return SymmetricEncryption.GenerateKey();
+
+        public string[] Read_Messages_Chat(string[] EncryptedMessages) {
+            string[] DecryptedMessages = new string[EncryptedMessages.Length];
+
+            for (int i = 0; i < EncryptedMessages.Length; i++) {
+                Console.WriteLine(this.Key.Private);
+
+                DecryptedMessages[i] = this.Key.Decrypt(EncryptedMessages[i], this.Key.Private);
+            }
+
+            return DecryptedMessages;
         }
         public static void Write_Messages_Chat() {
 
         }
+        public static string Read_User_PublicKey(string User) {
+            var conn = new SQLiteConnection(@"Data Source=UserList.db;Version=3;");
+            conn.Open();
+
+            string stm = "SELECT PublicKey FROM Main WHERE Username = @username";
+            var cmd = new SQLiteCommand(stm, conn);
+            cmd.Parameters.AddWithValue("@username", User);
+
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+
+            if (rdr.Read())
+            {
+                //Console.WriteLine(rdr.GetString(0));
+                //System.Threading.Thread.Sleep(5000);
+                return rdr.GetString(0);
+            }
+            else 
+            {
+                while (true) {
+                    Console.WriteLine("error at chat Read_User_PublicKey");
+                    Console.Read();
+                }
+            }
+        }
 
         public class Display
         {
-            public static void Messages(string[] Content) {
+            public static void Content(string[] Content) {
                 Board Board = new Board(20, 20);
 
                 

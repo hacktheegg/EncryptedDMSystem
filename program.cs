@@ -222,18 +222,21 @@ class Program
                 string FileName = Encode.WeaveStrings(Name1Hex, Name2Hex);
                 DMSExtras.DMSExtras.FileCreation(FileName);
 
-                string SymmetricKey = SymmetricEncryption.GenerateKey();
+                Tuple<string,string> SymmetricKey = SymmetricEncryption.GenerateKeyAndIV();
 
                 using (StreamWriter writer = new StreamWriter(@"chats\"+FileName+".txt"))
                 {
                     writer.WriteLine(
-                        this.Key.Encrypt("thisTheKey: "+ SymmetricKey,
-                        User.Read_User_PublicKey(Name)
-                    ));
+                        Name+":"+ this.Key.Encrypt(SymmetricKey.Item1+":"+SymmetricKey.Item2,
+                        User.Read_User_PublicKey(Name))
+                    );
                     writer.WriteLine(
-                        this.Key.Encrypt("thisTheKey: "+ SymmetricKey,
-                        User.Read_User_PublicKey(this.Username)
-                    ));
+                        this.Username+":"+ this.Key.Encrypt(SymmetricKey.Item1+":"+SymmetricKey.Item2,
+                        User.Read_User_PublicKey(this.Username))
+                    );
+                    writer.WriteLine(
+                        SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2)
+                    );
                 }
             }
             public static void Generate_Database() {
@@ -306,12 +309,23 @@ class Program
         }
 
         public string[] Read_Messages_Chat(string[] EncryptedMessages) {
-            string[] DecryptedMessages = new string[EncryptedMessages.Length];
+            string[] DecryptedMessages = new string[EncryptedMessages.Length-2];
 
-            for (int i = 0; i < EncryptedMessages.Length; i++) {
-                Console.WriteLine(this.Key.Private);
+            string SymmetricKey;
+            string iv;
 
-                DecryptedMessages[i] = this.Key.Decrypt(EncryptedMessages[i], this.Key.Private);
+            if (EncryptedMessages[0].StartsWith(this.Username)) {
+                SymmetricKey = this.Key.Decrypt(EncryptedMessages[0].Split(':')[1], this.Key.Private).Split(':')[0];
+                iv = this.Key.Decrypt(EncryptedMessages[0].Split(':')[1], this.Key.Private).Split(':')[1];
+            } else {
+                SymmetricKey = this.Key.Decrypt(EncryptedMessages[1].Split(':')[1], this.Key.Private).Split(':')[0];
+                iv = this.Key.Decrypt(EncryptedMessages[1].Split(':')[1], this.Key.Private).Split(':')[1];
+            }
+
+            for (int i = 2; i < EncryptedMessages.Length; i++) {
+
+                DecryptedMessages[i-2] = SymmetricEncryption.DecryptString(SymmetricKey, EncryptedMessages[i], iv);
+
             }
 
             return DecryptedMessages;

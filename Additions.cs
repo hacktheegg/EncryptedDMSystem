@@ -97,16 +97,14 @@ namespace Security
 
         public string Decrypt(string data, string recipientPrivateKey)
         {
-            try {
-                var cipher = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
-                var keyPair = (AsymmetricCipherKeyPair)new PemReader(new StringReader(recipientPrivateKey)).ReadObject();
-                cipher.Init(false, keyPair.Private);
+            var cipher = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
+            var keyPair = (AsymmetricCipherKeyPair)new PemReader(new StringReader(recipientPrivateKey)).ReadObject();
+            cipher.Init(false, keyPair.Private);
 
-                var dataToDecrypt = Convert.FromBase64String(data);
-                var decryptedData = cipher.DoFinal(dataToDecrypt);
+            var dataToDecrypt = Convert.FromBase64String(data);
+            var decryptedData = cipher.DoFinal(dataToDecrypt);
 
-                return Encoding.UTF8.GetString(decryptedData);   
-            }
+            return Encoding.UTF8.GetString(decryptedData);
         }
     }
 
@@ -114,22 +112,25 @@ namespace Security
 
     public class SymmetricEncryption
     {
-        public static string GenerateKey()
+        public static Tuple<string, string> GenerateKeyAndIV()
         {
             using (Aes aes = Aes.Create())
             {
                 aes.GenerateKey();
-                return Convert.ToBase64String(aes.Key);
+                aes.GenerateIV();
+
+                return new Tuple<string,string>(Convert.ToBase64String(aes.Key), Convert.ToBase64String(aes.IV));
+                //return (Convert.ToBase64String(aes.Key), Convert.ToBase64String(aes.IV));
             }
         }
 
-        public string EncryptString(string key, string plainText)
+        public static string EncryptString(string key, string plainText, string iv)
         {
             byte[] encrypted;
             using (Aes aes = Aes.Create())
             {
                 aes.Key = Convert.FromBase64String(key);
-                aes.GenerateIV();
+                aes.IV = Convert.FromBase64String(iv);
 
                 ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
 
@@ -148,14 +149,14 @@ namespace Security
             return Convert.ToBase64String(encrypted);
         }
 
-        public string DecryptString(string key, string cipherText)
+        public static string DecryptString(string key, string cipherText, string iv)
         {
             string plaintext = null;
 
             using (Aes aes = Aes.Create())
             {
                 aes.Key = Convert.FromBase64String(key);
-                aes.GenerateIV();
+                aes.IV = Convert.FromBase64String(iv);
 
                 ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 

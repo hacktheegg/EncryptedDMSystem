@@ -17,10 +17,10 @@ class Program
         //System.Threading.Thread.Sleep(5000);
 
         // example state //
-        User.Generate_Database();
+        // User.Generate_Database();
 
         new User("mario", "plumber", "mario").Generate();
-        new User("luigi", "player2", "luigi").Generate();
+        new User("luigi", "player2").Generate();
         new User("toad", "fungi", "toad").Generate();
         new User("waluigi", "waluigi", "waluigi").Generate();
 
@@ -29,7 +29,7 @@ class Program
         TempUser.Generate_Chat("luigi");
         TempUser.Generate_Chat("toad");
 
-        TempUser = new User("luigi", "player2", "luigi");
+        TempUser = new User("luigi", "player2");
         TempUser.Generate_Chat("toad");
 
         TempUser = new User("toad", "fungi", "toad");
@@ -79,7 +79,7 @@ class Program
         Board = new Board(20, 20);
         Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
 
-        User CurrentUser = new User(TempString, Result.Item2.ToLower(), "luigi");
+        User CurrentUser = new User(TempString, Result.Item2.ToLower());
 
 
         if (!(User.Exists(TempString) && User.Exists_PublicKey(CurrentUser.Key.Public))) {
@@ -100,11 +100,81 @@ class Program
 
         SelectedChat = CurrentUser.Read_Messages_FileName(SelectedChat);
 
-        string[] ChatContent = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
+        //string[] ChatContent = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
 
-        string[] DecryptedChatContent = CurrentUser.Read_Messages_Chat(ChatContent);
+        string[] DecryptedChatContent = CurrentUser.Read_Messages_Chat(SelectedChat);
 
         User.Display.Content(DecryptedChatContent);
+
+        Tuple<string, string> SymmetricKey = CurrentUser.Read_Chat_SymmetricKey(SelectedChat);
+
+        
+
+
+
+        Utilities.KeyListener KeyListener = new Utilities.KeyListener();
+
+        Thread threadKeys = new Thread(() =>
+        {
+            KeyListener.StartListening();
+        });
+
+        DMSExtras.ChatListener ChatListener = new DMSExtras.ChatListener();
+
+        Thread threadChat = new Thread(() =>
+        {
+            ChatListener.StartListening(SelectedChat);
+        });
+
+        threadChat.Start();
+        threadKeys.Start();
+
+        string typedText = string.Empty; // Move this declaration outside the while loop
+        string[] ChatMessages = new string[];
+
+        while (true)
+        {
+            typedText = KeyListener.GetTypedText();
+
+            if ((TempText.Content != typedText.ToString().ToLower() + " ") || ) {
+                User.Display.Content();
+            }
+
+            Thread.Sleep(50); // Sleep for a short duration to avoid excessive CPU usage
+
+        }
+
+
+
+        // User.Write_Messages_Chat(SymmetricKey, SelectedChat, "hello, this is a new message");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+        
+
+
+
+
+
+
+
+
+
+
 
         //User.Read_Messages_Chat();
 
@@ -308,11 +378,27 @@ class Program
             }
         }
 
-        public string[] Read_Messages_Chat(string[] EncryptedMessages) {
-            string[] DecryptedMessages = new string[EncryptedMessages.Length-2];
+        public string[] Read_Messages_Chat(string Chat) {
+            string[] DecryptedMessages = new string[File.ReadLines(@"chats\"+Chat+".txt").ToArray().Length-2];
 
+            
+            Tuple<string,string> SymmetricKey = this.Read_Chat_SymmetricKey(Chat);
+            
+
+            for (int i = 2; i < File.ReadLines(@"chats\"+Chat+".txt").ToArray().Length; i++) {
+
+                DecryptedMessages[i-2] = SymmetricEncryption.DecryptString(SymmetricKey.Item1, File.ReadLines(@"chats\"+Chat+".txt").ToArray()[i], SymmetricKey.Item2);
+
+            }
+
+            return DecryptedMessages;
+        }
+
+        public Tuple<string, string> Read_Chat_SymmetricKey(string SelectedChat) {
             string SymmetricKey;
             string iv;
+
+            string[] EncryptedMessages = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
 
             if (EncryptedMessages[0].StartsWith(this.Username)) {
                 SymmetricKey = this.Key.Decrypt(EncryptedMessages[0].Split(':')[1], this.Key.Private).Split(':')[0];
@@ -322,17 +408,14 @@ class Program
                 iv = this.Key.Decrypt(EncryptedMessages[1].Split(':')[1], this.Key.Private).Split(':')[1];
             }
 
-            for (int i = 2; i < EncryptedMessages.Length; i++) {
-
-                DecryptedMessages[i-2] = SymmetricEncryption.DecryptString(SymmetricKey, EncryptedMessages[i], iv);
-
-            }
-
-            return DecryptedMessages;
+            return new Tuple<string,string>(SymmetricKey,iv);
         }
-        public static void Write_Messages_Chat() {
 
+        public static void Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content) {
+            //SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2);
+            File.AppendAllText(@"chats\"+ChatName+".txt", SymmetricEncryption.EncryptString(SymmetricKey.Item1, Content, SymmetricKey.Item2));
         }
+
         public static string Read_User_PublicKey(string User) {
             var conn = new SQLiteConnection(@"Data Source=UserList.db;Version=3;");
             conn.Open();
@@ -360,7 +443,7 @@ class Program
 
         public class Display
         {
-            public static void Content(string[] Content) {
+            public static void Content(string[] Content, string TypedText = "") {
                 Board Board = new Board(20, 20);
 
                 
@@ -372,6 +455,8 @@ class Program
                     // Console.WriteLine("Content: " + Content[i] + "\ni: " + i);
                     Board = Text.Create(new Text(Tuple.Create(2,2+i), Content[i]), Board);
                 }
+
+                Board = Text.Create(new Text(Tuple.Create(1,1), TypedText), Board);
 
                 Board.Print(Board.smoothBoard(Board));
             }

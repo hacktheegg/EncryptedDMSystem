@@ -320,5 +320,27 @@ namespace DMSExtras
                 Console.WriteLine(Ex.ToString());
             }
         }
+        public class ChatListener {
+            private string[] ChatContent;
+            private readonly object lockObject = new object();
+
+            public string[] GetChatContent() {
+                lock {
+                    return ChatContent;
+                }
+            }
+
+            public void StartListening(string ChatRoom) {
+
+                while (true) {
+
+                    Thread.Sleep(100);
+
+                    File.ReadLines(@"chats\"+ChatRoom+".txt").ToArray();
+
+
+                }
+            }
+        }
     }
 }

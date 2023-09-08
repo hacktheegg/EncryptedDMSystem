@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Linq;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Security;
@@ -325,7 +326,7 @@ namespace DMSExtras
             private readonly object lockObject = new object();
 
             public string[] GetChatContent() {
-                lock {
+                lock (lockObject) {
                     return ChatContent;
                 }
             }
@@ -334,9 +335,9 @@ namespace DMSExtras
 
                 while (true) {
 
-                    Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(100);
 
-                    File.ReadLines(@"chats\"+ChatRoom+".txt").ToArray();
+                    ChatContent = File.ReadLines(@"chats\"+ChatRoom+".txt").ToArray();
 
 
                 }

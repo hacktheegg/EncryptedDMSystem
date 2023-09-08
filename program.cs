@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Data.SQLite;
+using System.Threading;
 
 using ObjectList;
 using Security;
@@ -17,7 +18,7 @@ class Program
         //System.Threading.Thread.Sleep(5000);
 
         // example state //
-        // User.Generate_Database();
+        User.Generate_Database();
 
         new User("mario", "plumber", "mario").Generate();
         new User("luigi", "player2").Generate();
@@ -119,7 +120,7 @@ class Program
             KeyListener.StartListening();
         });
 
-        DMSExtras.ChatListener ChatListener = new DMSExtras.ChatListener();
+        DMSExtras.DMSExtras.ChatListener ChatListener = new DMSExtras.DMSExtras.ChatListener();
 
         Thread threadChat = new Thread(() =>
         {
@@ -129,15 +130,21 @@ class Program
         threadChat.Start();
         threadKeys.Start();
 
-        string typedText = string.Empty; // Move this declaration outside the while loop
-        string[] ChatMessages = new string[];
+        string TypedText = string.Empty; // Move this declaration outside the while loop
+        string[] ChatMessages = {"TEMPVALUE"};
 
         while (true)
         {
-            typedText = KeyListener.GetTypedText();
+            
 
-            if ((TempText.Content != typedText.ToString().ToLower() + " ") || ) {
-                User.Display.Content();
+            if ((TypedText != KeyListener.GetTypedText().ToLower()) || (ChatMessages != ChatListener.GetChatContent())) {
+                TypedText = KeyListener.GetTypedText().ToLower();
+                ChatMessages = ChatListener.GetChatContent();
+
+                Console.WriteLine(KeyListener.GetTypedText().ToLower() + "   " + TypedText);
+                Console.WriteLine(ChatListener.GetChatContent() + "   " + ChatMessages);
+
+                User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),TypedText);
             }
 
             Thread.Sleep(50); // Sleep for a short duration to avoid excessive CPU usage
@@ -202,11 +209,11 @@ class Program
 
         //Console.WriteLine(Chat.Read.Messages.FileName(CurrentUser.Name, var[0]));
 
-        while (true) 
-        {
-            Console.Write("the end is never");
-            Console.ReadKey(false);
-        }
+        // while (true) 
+        // {
+            // Console.Write("the end is never");
+            // Console.ReadKey(false);
+        // }
     }
 
     public class User

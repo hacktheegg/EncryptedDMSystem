@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Data.SQLite;
 using System.Threading;
+using System.Windows.Forms;
 
 using ObjectList;
 using Security;
@@ -20,13 +21,13 @@ class Program
         // example state //
         User.Generate_Database();
 
-        new User("mario", "plumber", "mario").Generate();
+        new User("mario", "plumber").Generate();
         new User("luigi", "player2").Generate();
         new User("toad", "fungi", "toad").Generate();
         new User("waluigi", "waluigi", "waluigi").Generate();
 
 
-        User TempUser = new User("mario", "plumber", "mario");
+        User TempUser = new User("mario", "plumber");
         TempUser.Generate_Chat("luigi");
         TempUser.Generate_Chat("toad");
 
@@ -39,6 +40,10 @@ class Program
         TempUser.Generate_Chat("waluigi");
         // example state //
 
+        Console.WriteLine("    !!Epilepsy Warning!!");
+        Console.WriteLine("This program flickers a lot when running\n");
+        Console.WriteLine("I am not responsible for what is said here\nthough there is some moderation, I can only moderate if ");
+
 
         Start:
         Console.Clear();
@@ -47,7 +52,7 @@ class Program
         Board Board = new Board(20, 20);
         Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
 
-        Menu Menu = new Menu(2, Tuple.Create(2,2));
+        ObjectList.Menu Menu = new ObjectList.Menu(2, Tuple.Create(2,2));
         Menu.Values = new string[2]{"Login (Username)", "New"};
 
         Tuple<int, string> Result = Menu.Activate(Board);
@@ -72,7 +77,7 @@ class Program
         Board = new Board(20, 20);
         Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
 
-        Menu = new Menu(1, Tuple.Create(2,2));
+        Menu = new ObjectList.Menu(1, Tuple.Create(2,2));
         Menu.Values = new string[1]{"Password (Do Not Share)"};
 
         Result = Menu.Activate(Board);
@@ -92,7 +97,7 @@ class Program
 
         string[] var = CurrentUser.Read_Chats_Allowed(@"chats\");
 
-        Menu = new Menu(var.Length, Tuple.Create(2,2));
+        Menu = new ObjectList.Menu(var.Length, Tuple.Create(2,2));
         Menu.Values = var;
 
         Result = Menu.Activate(Board);
@@ -105,7 +110,7 @@ class Program
 
         string[] DecryptedChatContent = CurrentUser.Read_Messages_Chat(SelectedChat);
 
-        User.Display.Content(DecryptedChatContent);
+        //User.Display.Content(DecryptedChatContent);
 
         Tuple<string, string> SymmetricKey = CurrentUser.Read_Chat_SymmetricKey(SelectedChat);
 
@@ -130,25 +135,40 @@ class Program
         threadChat.Start();
         threadKeys.Start();
 
-        string TypedText = string.Empty; // Move this declaration outside the while loop
-        string[] ChatMessages = {"TEMPVALUE"};
+        string TypedText = ""; // Move this declaration outside the while loop
+        string[] ChatMessages = {"TEMPVALUE", "TEMPVALUE"};
 
         while (true)
         {
-            
 
-            if ((TypedText != KeyListener.GetTypedText().ToLower()) || (ChatMessages != ChatListener.GetChatContent())) {
+            Thread.Sleep(100); // Sleep for a short duration to avoid excessive CPU usage
+
+            //Console.WriteLine(KeyListener.GetTypedText().ToLower() + "\n" + TypedText);
+                
+            //for (int i = 0; i < ChatMessages.Length; i++) { Console.WriteLine(ChatMessages[i]); }
+            //Console.WriteLine("eeee");
+            //for (int i = 0; i < ChatListener.GetChatContent().Length; i++) { Console.WriteLine(ChatListener.GetChatContent()[i]); }
+            //Console.WriteLine("eeee");
+            if (KeyListener.GetKeyState(Keys.Enter)) {
+                if (!string.IsNullOrEmpty(TypedText)) {
+                    // Console.WriteLine(Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(TypedText)));
+
+                    CurrentUser.Write_Messages_Chat(SymmetricKey, SelectedChat, TypedText);
+
+                    KeyListener.ClearTypedText();
+                }
+            }
+
+            if ((TypedText != KeyListener.GetTypedText().ToLower()) || !ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
+
                 TypedText = KeyListener.GetTypedText().ToLower();
                 ChatMessages = ChatListener.GetChatContent();
-
-                Console.WriteLine(KeyListener.GetTypedText().ToLower() + "   " + TypedText);
-                Console.WriteLine(ChatListener.GetChatContent() + "   " + ChatMessages);
 
                 User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),TypedText);
             }
 
-            Thread.Sleep(50); // Sleep for a short duration to avoid excessive CPU usage
 
+                // Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content)
         }
 
 
@@ -311,9 +331,15 @@ class Program
                         this.Username+":"+ this.Key.Encrypt(SymmetricKey.Item1+":"+SymmetricKey.Item2,
                         User.Read_User_PublicKey(this.Username))
                     );
+                    /*writer.WriteLine(
+                        SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2)
+                    );
                     writer.WriteLine(
                         SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2)
                     );
+                    writer.WriteLine(
+                        SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2)
+                    );*/
                 }
             }
             public static void Generate_Database() {
@@ -418,9 +444,9 @@ class Program
             return new Tuple<string,string>(SymmetricKey,iv);
         }
 
-        public static void Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content) {
+        public void Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content) {
             //SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2);
-            File.AppendAllText(@"chats\"+ChatName+".txt", SymmetricEncryption.EncryptString(SymmetricKey.Item1, Content, SymmetricKey.Item2));
+            File.AppendAllText(@"chats\"+ChatName+".txt", "\n"+SymmetricEncryption.EncryptString(SymmetricKey.Item1, "["+this.Username+"] "+Content, SymmetricKey.Item2));
         }
 
         public static string Read_User_PublicKey(string User) {
@@ -458,14 +484,14 @@ class Program
 
                 // Console.WriteLine("Content.Length: " + Content.Length);
 
-                for (int i = 0; i < Content.Length; i++) {
+                for (int i = Content.Length-1; i >= 0; i--) {
                     // Console.WriteLine("Content: " + Content[i] + "\ni: " + i);
-                    Board = Text.Create(new Text(Tuple.Create(2,2+i), Content[i]), Board);
+                    Board = Text.Create(new Text(Tuple.Create(2,2+Math.Abs(Content.Length-1-i)), Content[i]), Board);
                 }
 
                 Board = Text.Create(new Text(Tuple.Create(1,1), TypedText), Board);
 
-                Board.Print(Board.smoothBoard(Board));
+                Board.Print(Board.smoothBoard(Board), true);
             }
             public static Board New(int Width, int Height) {
                 Board Board = new Board(Width, Height);

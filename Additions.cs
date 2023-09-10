@@ -334,12 +334,10 @@ namespace DMSExtras
             public void StartListening(string ChatRoom) {
 
                 while (true) {
-
-                    System.Threading.Thread.Sleep(100);
-
+                    
                     ChatContent = File.ReadLines(@"chats\"+ChatRoom+".txt").ToArray();
 
-
+                    System.Threading.Thread.Sleep(100);
                 }
             }
         }

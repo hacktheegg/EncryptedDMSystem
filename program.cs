@@ -42,7 +42,19 @@ class Program
 
         Console.WriteLine("    !!Epilepsy Warning!!");
         Console.WriteLine("This program flickers a lot when running\n");
-        Console.WriteLine("I am not responsible for what is said here\nthough there is some moderation, I can only moderate if ");
+        Console.WriteLine(
+            "I am not responsible for what is said here\n"+
+            "though there is some moderation, I can only moderate if\n"+
+            "something is reported (Security is the priority)\n"
+        );
+        Console.WriteLine(
+            "If input isnt working, try alt+tab to the program\n"+
+            "that has no display.\n"+
+            "                        I am aware of this error and\n"+
+            "have to suffer with it too. Message the user BugReport to\n"+
+            "report a bug (or github/discord/notepad file)"
+        );
+        Console.ReadKey(false);
 
 
         Start:
@@ -53,15 +65,29 @@ class Program
         Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
 
         ObjectList.Menu Menu = new ObjectList.Menu(2, Tuple.Create(2,2));
-        Menu.Values = new string[2]{"Login (Username)", "New"};
+        Menu.Values = new string[3]{"Login (Username)", "New", "alt+tab to fix input bug"};
 
         Tuple<int, string> Result = Menu.Activate(Board);
 
         if (Result.Item1 == 1) {
-            Console.WriteLine("Fresh Account");
-            System.Threading.Thread.Sleep(5000);
+            // Console.WriteLine("Fresh Account");
+            
             //Fresh Account
 
+            string TempUsername;
+            string TempPassword;
+            
+            Console.Write("New Account Username: ");
+            TempUsername = Console.ReadLine();
+            Console.Write("New Account Password: ");
+            TempPassword = Console.ReadLine();
+
+            System.Threading.Thread.Sleep(100);
+
+            new User(TempUsername, TempPassword).Generate();
+
+            Console.WriteLine("Account Made");
+            System.Threading.Thread.Sleep(5000);
             goto Start;
         } else if (!User.Exists(Result.Item2.ToLower())) {
             Console.WriteLine("Not Valid Username");
@@ -96,11 +122,33 @@ class Program
 
 
         string[] var = CurrentUser.Read_Chats_Allowed(@"chats\");
+        string[] DisplayedChats = new string[9];
 
-        Menu = new ObjectList.Menu(var.Length, Tuple.Create(2,2));
-        Menu.Values = var;
+        int Multiplyer = 0;
 
-        Result = Menu.Activate(Board);
+        while (Multiplyer == 0 || Result.Item1 == 7) {
+            for (int i = 0; i < 7; i++) {
+                if ((Multiplyer*7)+i < var.Length) {
+                    DisplayedChats[i] = var[(Multiplyer*7)+i];
+                } if ((Multiplyer*7)+i >= var.Length) { DisplayedChats[i] = "{EMPTY}"; }
+            }
+            DisplayedChats[7] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
+            DisplayedChats[8] = "New";
+
+            Menu = new ObjectList.Menu(DisplayedChats.Length, Tuple.Create(2,2));
+            Menu.Values = DisplayedChats;
+
+            Result = Menu.Activate(Board);
+
+            if (Result.Item1 == 7) {
+                Multiplyer++;
+            }
+        }
+
+        //Menu = new ObjectList.Menu(var.Length, Tuple.Create(2,2));
+        //Menu.Values = var;
+
+        //Result = Menu.Activate(Board);
 
         string SelectedChat = Menu.Values[Result.Item1];
 
@@ -311,6 +359,7 @@ class Program
             command = new SQLiteCommand(sqlCommand, connection);
 
             command.ExecuteNonQuery();
+            connection.Close();
         }
             public void Generate_Chat(string Name) {
                 string Name1Hex = Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(this.Username));
@@ -343,7 +392,7 @@ class Program
                 }
             }
             public static void Generate_Database() {
-                if (!System.IO.File.Exists("UserList.db"))
+                while (!System.IO.File.Exists("UserList.db"))
                 {
                     string connectionString = @"Data Source=UserList.db;Version=3;";
                     SQLiteConnection connection = new SQLiteConnection(connectionString);
@@ -463,7 +512,9 @@ class Program
             {
                 //Console.WriteLine(rdr.GetString(0));
                 //System.Threading.Thread.Sleep(5000);
-                return rdr.GetString(0);
+                string TempString = rdr.GetString(0);
+                rdr.Close();
+                return TempString;
             }
             else 
             {

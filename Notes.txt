@@ -3,22 +3,24 @@ hexadecimalise program.cs, function, line 218, Generate_Chat()
 
 
 //################################################################//
-|| After a month or so (however long it's been so far), the main  ||
-|| security of it is finally done. (on second thought, needs one  ||
-|| more touch of ofuscation within the chats themselves)          ||
+|| It's done, people can finally use it. It has several bugs such ||
+|| as: dropping key inputs at random, buggy menus, does not       ||
+|| automatically read inputs at the beginning due to unfocused,   ||
+|| tiny window being the thing reading the inputs, etc.           ||
 ||                                                                ||
-|| Right now, the difficult part is done, there is no longer any  ||
-|| need for more encryption, as if someone wants to brute-force   ||
-|| it, it would take an extremely long time. And if they don't    ||
-|| want to wait longer than the universe has existed to decrypt   ||
-|| it, they have to make their own version and have your:         ||
-|| ChatPassword, and LoginName. If you are diligent on the chats, ||
-|| no-one else should be able to get these.                       ||
+|| In the end, it functions, and that's all it needs to do when   ||
+|| needed. I do have some features in mind such as: blocking/     ||
+|| reporting system, a public chat room, and an actual way to     ||
+|| close the application. (:q)(in respect for vim)                ||
 ||                                                                ||
-|| After this part is done, I don't feel... accomplished, only a  ||
-|| bit relieved I can stop banging my head against a brick wall   ||
-|| with this. I'll take a break from code when this is project is ||
-|| complete, functional, and stable. That means that there won't  ||
-|| be any feature updates for a while after it reaches a full     ||
-|| release.                                                       ||
+|| I can now lay back a bit and relax, as this (sizable) project  ||
+|| as been finished. For the current state of the program there   ||
+|| shouldn't be any form of potential security risks, as it does  ||
+|| not store *just* the LoginName anywhere, but a mush of that    ||
+|| and the Password, this causes both to be difficult to get, as  ||
+|| it allows them to hide behind eachother.                       ||
+||                                                                ||
+|| I've prioritised encryption, and will continue to do so.       ||
+||                                                                ||
+||                           Goodnight                            ||
 //################################################################//

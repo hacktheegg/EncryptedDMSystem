@@ -5,6 +5,7 @@ using System.Text;
 using System.Data.SQLite;
 using System.Threading;
 using System.Windows.Forms;
+using System.Collections.Generic;
 
 using ObjectList;
 using Security;
@@ -21,23 +22,26 @@ class Program
         // example state //
         User.Generate_Database();
 
-        new User("mario", "plumber").Generate();
-        new User("luigi", "player2").Generate();
-        new User("toad", "fungi", "toad").Generate();
-        new User("waluigi", "waluigi", "waluigi").Generate();
+        User TempUser = new User("BugReport", "BugReport", "BugReport");
+        TempUser.Generate();
+        TempUser.Generate_Chat("BugReport");
+        // new User("mario", "plumber").Generate();
+        // new User("luigi", "player2").Generate();
+        // new User("toad", "fungi", "toad").Generate();
+        // new User("waluigi", "waluigi", "waluigi").Generate();
 
 
-        User TempUser = new User("mario", "plumber");
-        TempUser.Generate_Chat("luigi");
-        TempUser.Generate_Chat("toad");
+        // User TempUser = new User("mario", "plumber");
+        // TempUser.Generate_Chat("luigi");
+        // TempUser.Generate_Chat("toad");
 
-        TempUser = new User("luigi", "player2");
-        TempUser.Generate_Chat("toad");
+        // TempUser = new User("luigi", "player2");
+        // TempUser.Generate_Chat("toad");
 
-        TempUser = new User("toad", "fungi", "toad");
+        // TempUser = new User("toad", "fungi", "toad");
 
-        TempUser = new User("waluigi", "waluigi", "waluigi");
-        TempUser.Generate_Chat("waluigi");
+        // TempUser = new User("waluigi", "waluigi", "waluigi");
+        // TempUser.Generate_Chat("waluigi");
         // example state //
 
         Console.WriteLine("    !!Epilepsy Warning!!");
@@ -45,12 +49,12 @@ class Program
         Console.WriteLine(
             "I am not responsible for what is said here\n"+
             "though there is some moderation, I can only moderate if\n"+
-            "something is reported (Security is the priority)\n"
+            "something is reported (Security is the priority/no report\nSystem yet)\n"
         );
         Console.WriteLine(
             "If input isnt working, try alt+tab to the program\n"+
             "that has no display.\n"+
-            "                        I am aware of this error and\n"+
+            "\n\n\n                        I am aware of this error and\n"+
             "have to suffer with it too. Message the user BugReport to\n"+
             "report a bug (or github/discord/notepad file)"
         );
@@ -79,6 +83,7 @@ class Program
             
             Console.Write("New Account Username: ");
             TempUsername = Console.ReadLine();
+            Console.WriteLine("\"Keep it Secret, Keep it Safe\" -Gandalf");
             Console.Write("New Account Password: ");
             TempPassword = Console.ReadLine();
 
@@ -140,10 +145,37 @@ class Program
 
             Result = Menu.Activate(Board);
 
+            Multiplyer++;
+        }
+
+        var = Admin.Read.Users.All();
+        Multiplyer = 0;
+
+        Board = new Board(20, 20);
+        Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
+
+        while (Result.Item1 == 8 || Result.Item1 == 7) {
+            for (int i = 0; i < 7; i++) {
+                if ((Multiplyer*7)+i < var.Length) {
+                    DisplayedChats[i] = var[(Multiplyer*7)+i];
+                } if ((Multiplyer*7)+i >= var.Length) { DisplayedChats[i] = "{EMPTY}"; }
+            }
+            DisplayedChats[7] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
+            DisplayedChats[8] = "  Choose Chat to Create";
+
+            Menu = new ObjectList.Menu(DisplayedChats.Length, Tuple.Create(2,2));
+            Menu.Values = DisplayedChats;
+
+            Result = Menu.Activate(Board);
+
             if (Result.Item1 == 7) {
                 Multiplyer++;
+            } else {
+                CurrentUser.Generate_Chat(Menu.Values[Result.Item1]);
             }
         }
+
+
 
         //Menu = new ObjectList.Menu(var.Length, Tuple.Create(2,2));
         //Menu.Values = var;
@@ -587,6 +619,26 @@ class Program
                     }
 
                     return returnVal;
+                }
+            }
+            public class Users
+            {
+                public static string[] All() {
+                    var conn = new SQLiteConnection(@"Data Source=UserList.db;Version=3;");
+                    conn.Open();
+
+                    string stm = "SELECT Username FROM Main";
+                    var cmd = new SQLiteCommand(stm, conn);
+
+                    SQLiteDataReader rdr = cmd.ExecuteReader();
+
+                    List<string> usernames = new List<string>();
+                    while (rdr.Read())
+                    {
+                        usernames.Add(rdr.GetString(0));
+                    }
+                    rdr.Close();
+                    return usernames.ToArray();
                 }
             }
         }

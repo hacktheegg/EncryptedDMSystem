@@ -81,10 +81,10 @@ class Program
             string TempUsername;
             string TempPassword;
             
-            Console.Write("New Account Username: ");
+            Console.Write("New Account Username(has to be letters a-z in lowercase unless updated/woulnt recommend spaces): ");
             TempUsername = Console.ReadLine();
             Console.WriteLine("\"Keep it Secret, Keep it Safe\" -Gandalf");
-            Console.Write("New Account Password: ");
+            Console.Write("New Account Password(has to be letters a-z in lowercase unless updated/woulnt recommend spaces): ");
             TempPassword = Console.ReadLine();
 
             System.Threading.Thread.Sleep(100);

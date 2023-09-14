@@ -87,7 +87,7 @@ namespace Security
 
         public string Encrypt(string data, string recipientPublicKey)
         {
-            var cipher = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
+            var cipher = CipherUtilities.GetCipher("RSA/ECB/NoPadding");
             cipher.Init(true, new PemReader(new StringReader(recipientPublicKey)).ReadObject() as AsymmetricKeyParameter);
 
             var dataToEncrypt = Encoding.UTF8.GetBytes(data);
@@ -98,7 +98,7 @@ namespace Security
 
         public string Decrypt(string data, string recipientPrivateKey)
         {
-            var cipher = CipherUtilities.GetCipher("RSA/ECB/PKCS1Padding");
+            var cipher = CipherUtilities.GetCipher("RSA/ECB/NoPadding");
             var keyPair = (AsymmetricCipherKeyPair)new PemReader(new StringReader(recipientPrivateKey)).ReadObject();
             cipher.Init(false, keyPair.Private);
 

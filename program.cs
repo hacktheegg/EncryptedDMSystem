@@ -22,8 +22,8 @@ class Program
         // example state //
         User.Generate_Database();
 
+        new User("BugReport", "BugReport", "BugReport").Generate();
         User TempUser = new User("BugReport", "BugReport", "BugReport");
-        TempUser.Generate();
         TempUser.Generate_Chat("BugReport");
         // new User("mario", "plumber").Generate();
         // new User("luigi", "player2").Generate();
@@ -376,7 +376,7 @@ class Program
 
 
         public void Generate() {
-            if (User.Exists(this.Username) || User.Exists_PublicKey(this.Key.Public)) {
+            if (User.Exists(this.Username)) {
                 return;
             }
             User.Generate_Database();
@@ -404,14 +404,14 @@ class Program
 
                 using (StreamWriter writer = new StreamWriter(@"chats\"+FileName+".txt"))
                 {
-                    writer.WriteLine(
-                        Name+":"+ this.Key.Encrypt(SymmetricKey.Item1+":"+SymmetricKey.Item2,
-                        User.Read_User_PublicKey(Name))
+                    writer.WriteLine(         Name+":"+ this.Key.Encrypt(SymmetricKey.Item1+":"+SymmetricKey.Item2, User.Read_User_PublicKey(Name))
                     );
-                    writer.WriteLine(
-                        this.Username+":"+ this.Key.Encrypt(SymmetricKey.Item1+":"+SymmetricKey.Item2,
-                        User.Read_User_PublicKey(this.Username))
+                    //writer.WriteLine(Name);
+                    //writer.WriteLine(User.Read_User_PublicKey(Name));
+                    writer.WriteLine(this.Username+":"+ this.Key.Encrypt(SymmetricKey.Item1+":"+SymmetricKey.Item2, User.Read_User_PublicKey(this.Username))
                     );
+                    //writer.WriteLine(this.Username);
+                    //writer.WriteLine(User.Read_User_PublicKey(this.Username));
                     /*writer.WriteLine(
                         SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2)
                     );

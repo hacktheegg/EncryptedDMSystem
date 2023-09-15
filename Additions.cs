@@ -341,5 +341,29 @@ namespace DMSExtras
                 }
             }
         }
+        public class TextListener {
+            //private string[] TextContent;
+            //private readonly object lockObject = new object();
+
+            //public string[] GetTextContent() {
+            //    lock (lockObject) {
+            //        return TextContent;
+            //    }
+            //}
+
+            public void StartListening() {
+
+                Console.WriteLine("Start typing:");
+                StringBuilder sb = new StringBuilder();
+                while (true)
+                {
+                    var key = Console.ReadKey(false);
+                    if (key.Key == ConsoleKey.Enter)
+                        break;
+                    sb.Append(key.KeyChar);
+                    Console.WriteLine("\nYou've typed: " + sb.ToString());
+                }
+            }
+        }
     }
 }

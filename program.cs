@@ -6,6 +6,7 @@ using System.Data.SQLite;
 using System.Threading;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using ObjectList;
 using Security;
@@ -17,6 +18,21 @@ class Program
 {
     static void Main(string[] args)
     {
+
+        Task.Run(() =>
+        {
+            StringBuilder sb = new StringBuilder();
+            while (true)
+            {
+                var key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Enter)
+                    break;
+                sb.Append(key.KeyChar);
+                Console.WriteLine("\nYou've typed: " + sb.ToString());
+            }
+        }).Wait();
+
+
         //System.Threading.Thread.Sleep(5000);
 
         // example state //

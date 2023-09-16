@@ -351,17 +351,32 @@ namespace DMSExtras
             //    }
             //}
 
-            public void StartListening() {
+            public string TempString = "";
+            public int TempInt = 0;
 
-                Console.WriteLine("Start typing:");
+            public string StartListening() {
+
                 StringBuilder sb = new StringBuilder();
-                while (true)
-                {
-                    var key = Console.ReadKey(false);
-                    if (key.Key == ConsoleKey.Enter)
-                        break;
-                    sb.Append(key.KeyChar);
-                    Console.WriteLine("\nYou've typed: " + sb.ToString());
+                while (true) {
+                    var key = Console.ReadKey(true);
+                    if (key.Key == ConsoleKey.Enter) {
+                        return TempString;
+                    } else if (key.Key == ConsoleKey.Backspace) {
+                        TempString = TempString.Remove(TempString.Length - 1);
+                        sb.Remove(sb.Length - 1, 1);
+                    } else if (key.Key == ConsoleKey.UpArrow) {
+                        TempInt++;
+                    } else if (key.Key == ConsoleKey.DownArrow) {
+                        TempInt--;
+                    } else {
+                        sb.Append(key.KeyChar);
+                        TempString = sb.ToString();
+                    }
+
+                    Console.Clear();
+                    Console.WriteLine(TempInt + ": " + TempString);
+                    // TempString = "";
+                    // Console.WriteLine("\nYou've typed: " + sb.ToString());
                 }
             }
         }

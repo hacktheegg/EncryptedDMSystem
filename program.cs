@@ -20,7 +20,47 @@ class Program
     {
 
         DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
-        TextListener.StartListening();
+        //TextListener.StartListening();
+
+
+        string TypedText = "";
+        int Pointer = int.MaxValue;
+
+        Thread threadKeys = new Thread(() =>
+        {
+            TextListener.StartListening();
+        });
+
+        threadKeys.Start();
+
+
+
+        while (!TextListener.GetEndProgram()) {
+
+            if (TypedText != TextListener.GetTypedText() || Pointer != TextListener.GetPointer()) {
+                Console.Clear();
+                TypedText = TextListener.GetTypedText();
+                Pointer = TextListener.GetPointer();
+                Console.WriteLine(Pointer + ":" + TypedText);
+            }
+
+        }
+
+
+
+        threadKeys.Join();
+
+        while (true) 
+        {
+            Console.Write("the end is never");
+            Console.ReadKey(false);
+        }
+
+        /*
+
+
+
+
 
         //System.Threading.Thread.Sleep(5000);
 
@@ -318,7 +358,7 @@ class Program
         // {
             // Console.Write("the end is never");
             // Console.ReadKey(false);
-        // }
+        // } */
     }
 
     public class User

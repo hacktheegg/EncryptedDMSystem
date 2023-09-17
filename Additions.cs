@@ -351,31 +351,61 @@ namespace DMSExtras
             //    }
             //}
 
-            public string TempString = "";
-            public int TempInt = 0;
+            private string TypedText;
+            private int Pointer = 0;
+            private bool EndProgram = false;
+            private readonly object lockObject = new object();
 
-            public string StartListening() {
+            public bool GetEndProgram()
+            {
+                lock (lockObject)
+                {
+                    return EndProgram;
+                }
+            }
+
+            public string GetTypedText()
+            {
+                lock (lockObject)
+                {
+                    return TypedText;
+                }
+            }
+
+            public int GetPointer()
+            {
+                lock (lockObject)
+                {
+                    return Pointer;
+                }
+            }
+
+            public void StartListening() {
 
                 StringBuilder sb = new StringBuilder();
                 while (true) {
                     var key = Console.ReadKey(true);
                     if (key.Key == ConsoleKey.Enter) {
-                        return TempString;
-                    } else if (key.Key == ConsoleKey.Backspace) {
-                        TempString = TempString.Remove(TempString.Length - 1);
+                        EndProgram = true;
+                        while (true) {
+                            Console.ReadKey(true);
+                        }
+                    } else if (key.Key == ConsoleKey.Backspace && !string.IsNullOrEmpty(TypedText)) {
+                        TypedText = TypedText.Remove(TypedText.Length - 1);
                         sb.Remove(sb.Length - 1, 1);
                     } else if (key.Key == ConsoleKey.UpArrow) {
-                        TempInt++;
+                        Pointer++;
                     } else if (key.Key == ConsoleKey.DownArrow) {
-                        TempInt--;
+                        Pointer--;
                     } else {
                         sb.Append(key.KeyChar);
-                        TempString = sb.ToString();
+                        TypedText = sb.ToString();
                     }
 
-                    Console.Clear();
-                    Console.WriteLine(TempInt + ": " + TempString);
-                    // TempString = "";
+                    // Console.Clear();
+                    // Console.WriteLine(Pointer + ":" + TypedText);
+                    
+                    // TypedText = "";
                     // Console.WriteLine("\nYou've typed: " + sb.ToString());
                 }
             }

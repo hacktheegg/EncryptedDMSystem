@@ -342,15 +342,6 @@ namespace DMSExtras
             }
         }
         public class TextListener {
-            //private string[] TextContent;
-            //private readonly object lockObject = new object();
-
-            //public string[] GetTextContent() {
-            //    lock (lockObject) {
-            //        return TextContent;
-            //    }
-            //}
-
             private string TypedText;
             private int Pointer = 0;
             private bool EndProgram = false;
@@ -361,6 +352,22 @@ namespace DMSExtras
                 lock (lockObject)
                 {
                     return EndProgram;
+                }
+            }
+
+            public void SetEndProgram(bool var)
+            {
+                lock (lockObject)
+                {
+                    EndProgram = var;
+                }
+            }
+
+            public void SetTypedText(string var)
+            {
+                lock (lockObject)
+                {
+                    TypedText = var;
                 }
             }
 
@@ -387,9 +394,6 @@ namespace DMSExtras
                     var key = Console.ReadKey(true);
                     if (key.Key == ConsoleKey.Enter) {
                         EndProgram = true;
-                        while (true) {
-                            Console.ReadKey(true);
-                        }
                     } else if (key.Key == ConsoleKey.Backspace && !string.IsNullOrEmpty(TypedText)) {
                         TypedText = TypedText.Remove(TypedText.Length - 1);
                         sb.Remove(sb.Length - 1, 1);
@@ -401,12 +405,6 @@ namespace DMSExtras
                         sb.Append(key.KeyChar);
                         TypedText = sb.ToString();
                     }
-
-                    // Console.Clear();
-                    // Console.WriteLine(Pointer + ":" + TypedText);
-                    
-                    // TypedText = "";
-                    // Console.WriteLine("\nYou've typed: " + sb.ToString());
                 }
             }
         }

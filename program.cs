@@ -19,31 +19,26 @@ class Program
     static void Main(string[] args)
     {
 
+        
         DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
-        //TextListener.StartListening();
-
 
         string TypedText = "";
         int Pointer = int.MaxValue;
 
-        Thread threadKeys = new Thread(() =>
-        {
+        Thread threadKeys = new Thread(() => {
             TextListener.StartListening();
         });
 
+        /*
         threadKeys.Start();
 
-
-
         while (!TextListener.GetEndProgram()) {
-
             if (TypedText != TextListener.GetTypedText() || Pointer != TextListener.GetPointer()) {
                 Console.Clear();
                 TypedText = TextListener.GetTypedText();
                 Pointer = TextListener.GetPointer();
                 Console.WriteLine(Pointer + ":" + TypedText);
             }
-
         }
 
 
@@ -55,10 +50,7 @@ class Program
             Console.Write("the end is never");
             Console.ReadKey(false);
         }
-
-        /*
-
-
+        */
 
 
 
@@ -109,16 +101,28 @@ class Program
         Start:
         Console.Clear();
 
-        //Board Board = User.Display.New(20,20);
-        Board Board = new Board(20, 20);
-        Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
+        string[] Content = new string[3]{"Login (Username)", "New", "alt+tab to fix input bug"};
 
-        ObjectList.Menu Menu = new ObjectList.Menu(2, Tuple.Create(2,2));
-        Menu.Values = new string[3]{"Login (Username)", "New", "alt+tab to fix input bug"};
+        threadKeys.Start();
 
-        Tuple<int, string> Result = Menu.Activate(Board);
+        while (!TextListener.GetEndProgram()) {
+            if (TypedText != TextListener.GetTypedText() || Pointer != TextListener.GetPointer()) {
+                Console.Clear();
+                TypedText = TextListener.GetTypedText();
+                Pointer = TextListener.GetPointer();
+                if (string.IsNullOrEmpty(TypedText)) {
+                    User.Display.With.Pointer(Content, Pointer);
+                } else {
+                    User.Display.With.Pointer(Content, Pointer, TypedText);
+                }
+            }
+        }
 
-        if (Result.Item1 == 1) {
+        threadKeys.Join();
+
+        //Tuple<int, string> Result = Menu.Activate(Board);
+
+        if (Pointer == 1) {
             // Console.WriteLine("Fresh Account");
             
             //Fresh Account
@@ -139,7 +143,7 @@ class Program
             Console.WriteLine("Account Made");
             System.Threading.Thread.Sleep(5000);
             goto Start;
-        } else if (!User.Exists(Result.Item2.ToLower())) {
+        } else if (!User.Exists(TypedText)) {
             Console.WriteLine("Not Valid Username");
             System.Threading.Thread.Sleep(5000);
             //Not Valid Account Username
@@ -147,24 +151,30 @@ class Program
             goto Start;
         }
 
-        string TempString = Result.Item2.ToLower();
+        string Username = TypedText;
 
-        //Board = User.Display.New(20,20);
-        Board = new Board(20, 20);
-        Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
+        Content = new string[1]{"Password (Do Not Share)"};
 
-        Menu = new ObjectList.Menu(1, Tuple.Create(2,2));
-        Menu.Values = new string[1]{"Password (Do Not Share)"};
+        threadKeys.Start();
 
-        Result = Menu.Activate(Board);
+        while (!TextListener.GetEndProgram()) {
+            if (TypedText != TextListener.GetTypedText()) {
+                Console.Clear();
+                TypedText = TextListener.GetTypedText();
+                //Pointer = TextListener.GetPointer();
+                User.Display.Content(Content, TypedText);
+                //Console.WriteLine(Pointer + ":" + TypedText);
+            }
+        }
 
-        Board = new Board(20, 20);
-        Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
+        threadKeys.Join();
 
-        User CurrentUser = new User(TempString, Result.Item2.ToLower());
+        string Password = TypedText;
+
+        User CurrentUser = new User(Username, Password);
 
 
-        if (!(User.Exists(TempString) && User.Exists_PublicKey(CurrentUser.Key.Public))) {
+        if (!(User.Exists(Username) && User.Exists_PublicKey(CurrentUser.Key.Public))) {
             Console.WriteLine("Not The Correct Password");
             System.Threading.Thread.Sleep(5000);
             goto Start;
@@ -176,7 +186,7 @@ class Program
 
         int Multiplyer = 0;
 
-        while (Multiplyer == 0 || Result.Item1 == 7) {
+        while (Multiplyer == 0 || Pointer == 7) {
             for (int i = 0; i < 7; i++) {
                 if ((Multiplyer*7)+i < var.Length) {
                     DisplayedChats[i] = var[(Multiplyer*7)+i];
@@ -185,10 +195,21 @@ class Program
             DisplayedChats[7] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
             DisplayedChats[8] = "New";
 
-            Menu = new ObjectList.Menu(DisplayedChats.Length, Tuple.Create(2,2));
-            Menu.Values = DisplayedChats;
+            
 
-            Result = Menu.Activate(Board);
+            threadKeys.Start();
+
+            while (!TextListener.GetEndProgram()) {
+                if (TypedText != TextListener.GetTypedText()) {
+                    Console.Clear();
+                    TypedText = TextListener.GetTypedText();
+                    User.Display.With.Pointer(DisplayedChats, Pointer, TypedText);
+                }
+            }
+
+            threadKeys.Join();
+
+
 
             Multiplyer++;
         }
@@ -196,10 +217,7 @@ class Program
         var = Admin.Read.Users.All();
         Multiplyer = 0;
 
-        Board = new Board(20, 20);
-        Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
-
-        while (Result.Item1 == 8 || Result.Item1 == 7) {
+        while (Pointer == 8 || Pointer == 7) {
             for (int i = 0; i < 7; i++) {
                 if ((Multiplyer*7)+i < var.Length) {
                     DisplayedChats[i] = var[(Multiplyer*7)+i];
@@ -208,30 +226,32 @@ class Program
             DisplayedChats[7] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
             DisplayedChats[8] = "  Choose Chat to Create";
 
-            Menu = new ObjectList.Menu(DisplayedChats.Length, Tuple.Create(2,2));
-            Menu.Values = DisplayedChats;
+            threadKeys.Start();
 
-            Result = Menu.Activate(Board);
+            while (!TextListener.GetEndProgram()) {
+                if (TypedText != TextListener.GetTypedText()) {
+                    Console.Clear();
+                    TypedText = TextListener.GetTypedText();
+                    User.Display.With.Pointer(DisplayedChats, Pointer, TypedText);
+                }
+            }
 
-            if (Result.Item1 == 7) {
+            threadKeys.Join();
+
+            if (Pointer == 7) {
                 Multiplyer++;
             } else {
-                CurrentUser.Generate_Chat(Menu.Values[Result.Item1]);
+                CurrentUser.Generate_Chat(DisplayedChats[Pointer]);
             }
         }
 
 
 
-        //Menu = new ObjectList.Menu(var.Length, Tuple.Create(2,2));
-        //Menu.Values = var;
-
-        //Result = Menu.Activate(Board);
-
-        string SelectedChat = Menu.Values[Result.Item1];
+        string SelectedChat = DisplayedChats[Pointer];
 
         SelectedChat = CurrentUser.Read_Messages_FileName(SelectedChat);
 
-        //string[] ChatContent = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
+
 
         string[] DecryptedChatContent = CurrentUser.Read_Messages_Chat(SelectedChat);
 
@@ -243,12 +263,12 @@ class Program
 
 
 
-        Utilities.KeyListener KeyListener = new Utilities.KeyListener();
+        /* Utilities.KeyListener KeyListener = new Utilities.KeyListener();
 
         Thread threadKeys = new Thread(() =>
         {
             KeyListener.StartListening();
-        });
+        }); */
 
         DMSExtras.DMSExtras.ChatListener ChatListener = new DMSExtras.DMSExtras.ChatListener();
 
@@ -258,9 +278,10 @@ class Program
         });
 
         threadChat.Start();
+        
         threadKeys.Start();
 
-        string TypedText = ""; // Move this declaration outside the while loop
+        TypedText = ""; // Move this declaration outside the while loop
         string[] ChatMessages = {"TEMPVALUE", "TEMPVALUE"};
 
         while (true)
@@ -274,26 +295,27 @@ class Program
             //Console.WriteLine("eeee");
             //for (int i = 0; i < ChatListener.GetChatContent().Length; i++) { Console.WriteLine(ChatListener.GetChatContent()[i]); }
             //Console.WriteLine("eeee");
-            if (KeyListener.GetKeyState(Keys.Enter)) {
+
+            if (TextListener.GetEndProgram()) {
                 if (!string.IsNullOrEmpty(TypedText)) {
                     // Console.WriteLine(Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(TypedText)));
 
                     CurrentUser.Write_Messages_Chat(SymmetricKey, SelectedChat, TypedText);
 
-                    KeyListener.ClearTypedText();
+                    TextListener.SetTypedText("");
                 }
             }
 
-            if ((TypedText != KeyListener.GetTypedText().ToLower()) || !ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
+            if ((TypedText != TextListener.GetTypedText()) || !ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
 
-                TypedText = KeyListener.GetTypedText().ToLower();
+                TypedText = TextListener.GetTypedText();
                 ChatMessages = ChatListener.GetChatContent();
 
                 User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),TypedText);
             }
 
 
-                // Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content)
+            // Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content)
         }
 
 
@@ -604,27 +626,44 @@ class Program
 
         public class Display
         {
+            public class With
+            {
+                public static void Pointer(string[] Content, int pointer, string TypedText = "") {
+                    Board Board = new Board(20, 20);
+                    Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
+
+                    // Text Text = new Text(Tuple.Create(0,0), "");
+
+                    for (int i = Content.Length-1; i >= 0; i--) {
+                        
+                        if (pointer == i) {
+                            // Console.WriteLine("yes");
+                            Board = Text.Create(new Text(Tuple.Create(2, 2+Content.Length-i), "><"+Content[i]), Board);
+                        } else {
+                            // Console.WriteLine("no");
+                            Board = Text.Create(new Text(Tuple.Create(2, 2+Content.Length-i), "[]"+Content[i]), Board);
+                        }
+                    }
+
+                    Console.WriteLine(TypedText);
+
+                    Board = Text.Create(new Text(Tuple.Create(1,1), TypedText), Board);
+
+                    Board.Print(Board.smoothBoard(Board), true);
+                }
+
+            }
             public static void Content(string[] Content, string TypedText = "") {
                 Board Board = new Board(20, 20);
-
-                
                 Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
-
-                // Console.WriteLine("Content.Length: " + Content.Length);
-
+                
                 for (int i = Content.Length-1; i >= 0; i--) {
-                    // Console.WriteLine("Content: " + Content[i] + "\ni: " + i);
                     Board = Text.Create(new Text(Tuple.Create(2,2+Math.Abs(Content.Length-1-i)), Content[i]), Board);
                 }
 
                 Board = Text.Create(new Text(Tuple.Create(1,1), TypedText), Board);
 
-                Board.Print(Board.smoothBoard(Board), true);
-            }
-            public static Board New(int Width, int Height) {
-                Board Board = new Board(Width, Height);
-                Board = Square.Create(new Square(Width,Height,Tuple.Create(0,0)), Board);
-                return Board;
+                Board.Print(Board.smoothBoard(Board));
             }
         }
     }

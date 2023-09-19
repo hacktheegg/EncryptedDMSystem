@@ -347,14 +347,6 @@ namespace DMSExtras
             private bool EndProgram = false;
             private readonly object lockObject = new object();
 
-            public bool GetEndProgram()
-            {
-                lock (lockObject)
-                {
-                    return EndProgram;
-                }
-            }
-
             public void SetEndProgram(bool var)
             {
                 lock (lockObject)
@@ -368,6 +360,22 @@ namespace DMSExtras
                 lock (lockObject)
                 {
                     TypedText = var;
+                }
+            }
+
+            public void SetPointer(int var)
+            {
+                lock (lockObject)
+                {
+                    Pointer = var;
+                }
+            }
+
+            public bool GetEndProgram()
+            {
+                lock (lockObject)
+                {
+                    return EndProgram;
                 }
             }
 
@@ -388,22 +396,23 @@ namespace DMSExtras
             }
 
             public void StartListening() {
-
                 StringBuilder sb = new StringBuilder();
                 while (true) {
-                    var key = Console.ReadKey(true);
-                    if (key.Key == ConsoleKey.Enter) {
-                        EndProgram = true;
-                    } else if (key.Key == ConsoleKey.Backspace && !string.IsNullOrEmpty(TypedText)) {
-                        TypedText = TypedText.Remove(TypedText.Length - 1);
-                        sb.Remove(sb.Length - 1, 1);
-                    } else if (key.Key == ConsoleKey.UpArrow) {
-                        Pointer++;
-                    } else if (key.Key == ConsoleKey.DownArrow) {
-                        Pointer--;
-                    } else {
-                        sb.Append(key.KeyChar);
-                        TypedText = sb.ToString();
+                    if (Console.KeyAvailable) {
+                        var key = Console.ReadKey(true);
+                        if (key.Key == ConsoleKey.Enter) {
+                            EndProgram = true;
+                        } else if (key.Key == ConsoleKey.Backspace && !string.IsNullOrEmpty(TypedText)) {
+                            TypedText = TypedText.Remove(TypedText.Length - 1);
+                            sb.Remove(sb.Length - 1, 1);
+                        } else if (key.Key == ConsoleKey.UpArrow) {
+                            Pointer++;
+                        } else if (key.Key == ConsoleKey.DownArrow) {
+                            Pointer--;
+                        } else {
+                            sb.Append(key.KeyChar);
+                            TypedText = sb.ToString();
+                        }
                     }
                 }
             }

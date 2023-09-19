@@ -29,6 +29,8 @@ class Program
             TextListener.StartListening();
         });
 
+        threadKeys.Start();
+
         /*
         threadKeys.Start();
 
@@ -95,30 +97,37 @@ class Program
             "have to suffer with it too. Message the user BugReport to\n"+
             "report a bug (or github/discord/notepad file)"
         );
-        Console.ReadKey(false);
+        Console.ReadKey(true);
 
 
         Start:
         Console.Clear();
 
-        string[] Content = new string[3]{"Login (Username)", "New", "alt+tab to fix input bug"};
+        TextListener.SetPointer(5);
+        TextListener.SetTypedText(" ");
+        TextListener.SetEndProgram(false);
 
-        threadKeys.Start();
+        string[] Content = new string[3]{"Login (Username)", "New", "alt+tab to fix input bug"};
 
         while (!TextListener.GetEndProgram()) {
             if (TypedText != TextListener.GetTypedText() || Pointer != TextListener.GetPointer()) {
                 Console.Clear();
                 TypedText = TextListener.GetTypedText();
                 Pointer = TextListener.GetPointer();
-                if (string.IsNullOrEmpty(TypedText)) {
-                    User.Display.With.Pointer(Content, Pointer);
-                } else {
-                    User.Display.With.Pointer(Content, Pointer, TypedText);
+                if (Pointer >= Content.Length) {
+                    TextListener.SetPointer(0);
+                } else if (Pointer < 0) {
+                    TextListener.SetPointer(Content.Length-1);
                 }
+                User.Display.With.Pointer(Content, Pointer, TypedText);
             }
         }
+        
+        TextListener.SetEndProgram(false);
+        TextListener.SetTypedText("");
+        // threadKeys.Join();
 
-        threadKeys.Join();
+        // threadKeys.Start();
 
         //Tuple<int, string> Result = Menu.Activate(Board);
 
@@ -155,7 +164,7 @@ class Program
 
         Content = new string[1]{"Password (Do Not Share)"};
 
-        threadKeys.Start();
+        // threadKeys.Start();
 
         while (!TextListener.GetEndProgram()) {
             if (TypedText != TextListener.GetTypedText()) {
@@ -167,7 +176,7 @@ class Program
             }
         }
 
-        threadKeys.Join();
+        // threadKeys.Join();
 
         string Password = TypedText;
 
@@ -197,7 +206,7 @@ class Program
 
             
 
-            threadKeys.Start();
+            // threadKeys.Start();
 
             while (!TextListener.GetEndProgram()) {
                 if (TypedText != TextListener.GetTypedText()) {
@@ -207,7 +216,7 @@ class Program
                 }
             }
 
-            threadKeys.Join();
+            // threadKeys.Join();
 
 
 
@@ -226,7 +235,7 @@ class Program
             DisplayedChats[7] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
             DisplayedChats[8] = "  Choose Chat to Create";
 
-            threadKeys.Start();
+            // threadKeys.Start();
 
             while (!TextListener.GetEndProgram()) {
                 if (TypedText != TextListener.GetTypedText()) {
@@ -236,7 +245,7 @@ class Program
                 }
             }
 
-            threadKeys.Join();
+            // threadKeys.Join();
 
             if (Pointer == 7) {
                 Multiplyer++;
@@ -279,7 +288,7 @@ class Program
 
         threadChat.Start();
         
-        threadKeys.Start();
+        // threadKeys.Start();
 
         TypedText = ""; // Move this declaration outside the while loop
         string[] ChatMessages = {"TEMPVALUE", "TEMPVALUE"};
@@ -634,22 +643,22 @@ class Program
 
                     // Text Text = new Text(Tuple.Create(0,0), "");
 
-                    for (int i = Content.Length-1; i >= 0; i--) {
+                    for (int i = 0; i < Content.Length; i++) {
                         
                         if (pointer == i) {
                             // Console.WriteLine("yes");
-                            Board = Text.Create(new Text(Tuple.Create(2, 2+Content.Length-i), "><"+Content[i]), Board);
+                            Board = Text.Create(new Text(Tuple.Create(2, 2+i), "><"+Content[i]), Board);
                         } else {
                             // Console.WriteLine("no");
-                            Board = Text.Create(new Text(Tuple.Create(2, 2+Content.Length-i), "[]"+Content[i]), Board);
+                            Board = Text.Create(new Text(Tuple.Create(2, 2+i), "[]"+Content[i]), Board);
                         }
                     }
 
-                    Console.WriteLine(TypedText);
+                    // Console.WriteLine(TypedText);
 
                     Board = Text.Create(new Text(Tuple.Create(1,1), TypedText), Board);
 
-                    Board.Print(Board.smoothBoard(Board), true);
+                    Board.Print(Board.smoothBoard(Board));
                 }
 
             }
@@ -657,8 +666,8 @@ class Program
                 Board Board = new Board(20, 20);
                 Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
                 
-                for (int i = Content.Length-1; i >= 0; i--) {
-                    Board = Text.Create(new Text(Tuple.Create(2,2+Math.Abs(Content.Length-1-i)), Content[i]), Board);
+                for (int i = 0; i < Content.Length; i++) {
+                    Board = Text.Create(new Text(Tuple.Create(2,2+i), Content[i]), Board);
                 }
 
                 Board = Text.Create(new Text(Tuple.Create(1,1), TypedText), Board);

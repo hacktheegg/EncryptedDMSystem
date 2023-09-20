@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Linq;
+using System.Threading;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Security;
@@ -341,79 +342,119 @@ namespace DMSExtras
                 }
             }
         }
+
         public class TextListener {
             private string TypedText;
             private int Pointer = 0;
             private bool EndProgram = false;
+            private bool isListening = false;
+            private Thread listeningThread;
             private readonly object lockObject = new object();
 
-            public void SetEndProgram(bool var)
-            {
-                lock (lockObject)
-                {
+            public void SetEndProgram(bool var) {
+                Monitor.Enter(lockObject);
+                try {
                     EndProgram = var;
+                } finally {
+                    Monitor.Exit(lockObject);
                 }
             }
 
-            public void SetTypedText(string var)
-            {
-                lock (lockObject)
-                {
+            public void SetTypedText(string var) {
+                Monitor.Enter(lockObject);
+                try {
                     TypedText = var;
+                } finally {
+                    Monitor.Exit(lockObject);
                 }
             }
 
-            public void SetPointer(int var)
-            {
-                lock (lockObject)
-                {
+            public void SetPointer(int var) {
+                Monitor.Enter(lockObject);
+                try {
                     Pointer = var;
+                } finally {
+                    Monitor.Exit(lockObject);
                 }
             }
 
-            public bool GetEndProgram()
-            {
-                lock (lockObject)
-                {
+            public bool GetEndProgram() {
+                Monitor.Enter(lockObject);
+                try {
                     return EndProgram;
+                } finally {
+                    Monitor.Exit(lockObject);
                 }
             }
 
-            public string GetTypedText()
-            {
-                lock (lockObject)
-                {
+            public string GetTypedText() {
+                Monitor.Enter(lockObject);
+                try {
                     return TypedText;
+                } finally {
+                    Monitor.Exit(lockObject);
                 }
             }
 
-            public int GetPointer()
-            {
-                lock (lockObject)
-                {
+            public int GetPointer() {
+                Monitor.Enter(lockObject);
+                try {
                     return Pointer;
+                } finally {
+                    Monitor.Exit(lockObject);
                 }
             }
 
             public void StartListening() {
-                StringBuilder sb = new StringBuilder();
-                while (true) {
-                    if (Console.KeyAvailable) {
-                        var key = Console.ReadKey(true);
-                        if (key.Key == ConsoleKey.Enter) {
-                            EndProgram = true;
-                        } else if (key.Key == ConsoleKey.Backspace && !string.IsNullOrEmpty(TypedText)) {
-                            TypedText = TypedText.Remove(TypedText.Length - 1);
-                            sb.Remove(sb.Length - 1, 1);
-                        } else if (key.Key == ConsoleKey.UpArrow) {
-                            Pointer++;
-                        } else if (key.Key == ConsoleKey.DownArrow) {
-                            Pointer--;
-                        } else {
-                            sb.Append(key.KeyChar);
-                            TypedText = sb.ToString();
+                isListening = true;
+                listeningThread = new Thread(() => {
+                    StringBuilder sb = new StringBuilder();
+                    while (isListening) {
+                        if (Console.KeyAvailable) {
+                            var key = Console.ReadKey(true);
+                            if (key.Key == ConsoleKey.Enter) {
+                                SetEndProgram(true);
+                            } else if (key.Key == ConsoleKey.Backspace && !string.IsNullOrEmpty(GetTypedText())) {
+                                Monitor.Enter(lockObject);
+                                try {
+                                    TypedText = TypedText.Remove(TypedText.Length - 1);
+                                    sb.Remove(sb.Length - 1, 1);
+                                } finally {
+                                    Monitor.Exit(lockObject);
+                                }
+                            } else if (key.Key == ConsoleKey.UpArrow) {
+                                Monitor.Enter(lockObject);
+                                try {
+                                    Pointer++;
+                                } finally {
+                                    Monitor.Exit(lockObject);
+                                }
+                            } else if (key.Key == ConsoleKey.DownArrow) {
+                                Monitor.Enter(lockObject);
+                                try {
+                                    Pointer--;
+                                } finally {
+                                    Monitor.Exit(lockObject);
+                                }
+                            } else {
+                                Monitor.Enter(lockObject);
+                                try {
+                                    sb.Append(key.KeyChar);
+                                    TypedText = sb.ToString();
+                                    Console.WriteLine(TypedText);
+                                } finally {
+                                    Monitor.Exit(lockObject);
+                                }
+                            }
                         }
                     }
+                });
+                listeningThread.Start();
+            }
+            public void StopListening() {
+                isListening = false;
+                if (listeningThread != null) {
+                    listeningThread.Join(); // Wait for the listening thread to finish
                 }
             }
         }

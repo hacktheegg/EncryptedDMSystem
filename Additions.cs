@@ -441,7 +441,7 @@ namespace DMSExtras
                                 try {
                                     sb.Append(key.KeyChar);
                                     TypedText = sb.ToString();
-                                    Console.WriteLine(TypedText);
+                                    // Console.WriteLine(TypedText);
                                 } finally {
                                     Monitor.Exit(lockObject);
                                 }

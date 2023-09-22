@@ -54,6 +54,10 @@ class Program
         TextListener.SetEndProgram(false);
 
         string[] Content = new string[3]{"Login", "New", "Public Room (404 not found)"};
+        
+        if (Pointer != int.MaxValue) {
+            User.Display.With.Pointer(Content, 0);
+        }
 
         TextListener.StartListening();
         while (!TextListener.GetEndProgram()) {
@@ -334,12 +338,17 @@ class Program
                 if (!string.IsNullOrEmpty(TypedText)) {
                     // Console.WriteLine(Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(TypedText)));
 
+                    if (BadWords.BadWords.Retrieve().Any(TypedText.Contains)) {
+                        Console.WriteLine("bad Word Found, Message not Sent");
+                        System.Threading.Thread.Sleep(1000);
+                    } else {
                     CurrentUser.Write_Messages_Chat(SymmetricKey, SelectedChat, TypedText);
 
                     TextListener.StopListening();
                     TextListener.SetTypedText("");
                     TextListener.SetEndProgram(false);
                     TextListener.StartListening();
+                    }
                 }
             }
 

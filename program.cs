@@ -22,13 +22,10 @@ class Program
     static void Main(string[] args)
     {
 
-        //User.User User = User.User;
-
-        
         DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
 
         string TypedText = "";
-        int Pointer = int.MaxValue;
+        // int Pointer = int.MaxValue;
 
 
 
@@ -53,136 +50,59 @@ class Program
 
         Start:
         
-        TextListener.SetPointer(0);
-        TextListener.SetTypedText(" ");
-        TextListener.SetEndProgram(false);
 
         string[] Content = new string[3]{"Login", "New", "Public Room (404 not found)"};
-        
-        if (Pointer != int.MaxValue) {
-            User.User.Display.With.Pointer(Content, 0);
-        }
 
-        TextListener.StartListening();
-        while (!TextListener.GetEndProgram()) {
-            if (Pointer != TextListener.GetPointer()) {
-                // TypedText = TextListener.GetTypedText();
-                Pointer = TextListener.GetPointer();
-                if (Pointer >= Content.Length) {
-                    TextListener.SetPointer(0);
-                } else if (Pointer < 0) {
-                    TextListener.SetPointer(Content.Length-1);
-                }
-                User.User.Display.With.Pointer(Content, Pointer);
-            }
-        }
-        TextListener.StopListening();
+        Tuple<int, string> Tuple = MenuLoop(Content, false);
 
 
-        if (Pointer == 1) {
+        if (Tuple.Item1 == 1) {
             string TempUsername;
             string TempPassword;
 
             BadNameUsername:
-            TextListener.SetPointer(0);
-            TextListener.SetTypedText(" ");
-            TextListener.SetEndProgram(false);
             
             Content = new string[1]{"New Account Username: "};
 
-            TextListener.StartListening();
-            User.User.Display.Content(Content, TypedText);
-            while (!TextListener.GetEndProgram()) {
-                if (TypedText != TextListener.GetTypedText()) {
-                    TypedText = TextListener.GetTypedText();
-                    // Pointer = TextListener.GetPointer();
-                    User.User.Display.Content(Content, TypedText);
-                    //Console.WriteLine(TypedText);
-                }
-            }
-            TextListener.StopListening();
+            Tuple = MenuLoop(Content, true);
 
-            if (BadWords.BadWords.list.Any(TypedText.Contains)) {
+            if (BadWords.BadWords.list.Any(Tuple.Item2.Contains)) {
                 Console.WriteLine("bad Word Found, Redo Step");
                 System.Threading.Thread.Sleep(5000);
                 goto BadNameUsername;
             }
 
-
-
-            TempUsername = TypedText;
+            TempUsername = Tuple.Item2;
 
             Content = new string[1]{"New Account Password: "};
             
-            TextListener.SetPointer(0);
-            TextListener.SetTypedText(" ");
-            TextListener.SetEndProgram(false);
+            Tuple = MenuLoop(Content, true);
 
-            TextListener.StartListening();
-            while (!TextListener.GetEndProgram()) {
-                if (TypedText != TextListener.GetTypedText()) {
-                    TypedText = TextListener.GetTypedText();
-                    Pointer = TextListener.GetPointer();
-                    User.User.Display.Content(Content, TypedText);
-                }
-            }
-            TextListener.StopListening();
-            TempPassword = TypedText;
-
-            // System.Threading.Thread.Sleep(100);
+            TempPassword = Tuple.Item2;
 
             new User.User(TempUsername, TempPassword).Generate();
 
             Console.WriteLine("Account Made");
             System.Threading.Thread.Sleep(5000);
             goto Start;
-        } else if (Pointer == 2) {
+        } else if (Tuple.Item1 == 2) {
             Console.WriteLine("Public Chat not exist yet");
             System.Threading.Thread.Sleep(5000);
             //Not Valid Account Username
-
-            Pointer = 10;
             goto Start;
         }
 
-        TextListener.SetPointer(0);
-        TextListener.SetTypedText(" ");
-        TextListener.SetEndProgram(false);
         Content = new string[1]{"Username"};
 
-        TextListener.StartListening();
-        while (!TextListener.GetEndProgram()) {
-            if (TypedText != TextListener.GetTypedText()) {
-                TypedText = TextListener.GetTypedText();
-                Pointer = TextListener.GetPointer();
-                User.User.Display.Content(Content, TypedText);
-            }
-        }
-        TextListener.StopListening();
+        Tuple = MenuLoop(Content, true);
         
-        string Username = TypedText;
+        string Username = Tuple.Item2;
 
         Content = new string[1]{"Password (Do Not Share)"};
 
-        TextListener.SetPointer(0);
-        TextListener.SetTypedText(" ");
-        TextListener.SetEndProgram(false);
+        Tuple = MenuLoop(Content, true);
 
-        // threadKeys.Start();
-        TextListener.StartListening();
-        while (!TextListener.GetEndProgram()) {
-            if (TypedText != TextListener.GetTypedText()) {
-                Console.Clear();
-                TypedText = TextListener.GetTypedText();
-                Pointer = TextListener.GetPointer();
-                User.User.Display.Content(Content, TypedText);
-            }
-        }
-        TextListener.StopListening();
-
-        // threadKeys.Join();
-
-        string Password = TypedText;
+        string Password = Tuple.Item2;
 
         User.User CurrentUser = new User.User(Username, Password);
 
@@ -199,50 +119,28 @@ class Program
 
         int Multiplyer = 0;
 
-        while (Multiplyer == 0 || Pointer == 7) {
+        while (Multiplyer == 0 || Tuple.Item1 == 7 || Tuple.Item1 == 8) {
             for (int i = 0; i < 7; i++) {
                 if ((Multiplyer*7)+i < var.Length) {
                     DisplayedChats[i] = var[(Multiplyer*7)+i];
                 } if ((Multiplyer*7)+i >= var.Length) { DisplayedChats[i] = "{EMPTY}"; }
             }
-            DisplayedChats[7] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
-            DisplayedChats[8] = "New";
+            DisplayedChats[7] = "Previous";
+            DisplayedChats[8] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
 
-            
+            Tuple = MenuLoop(Content, false);
 
-            // threadKeys.Start();
-
-            TextListener.SetPointer(0);
-            TextListener.SetTypedText(" ");
-            TextListener.SetEndProgram(false);
-
-            TextListener.StartListening();
-            while (!TextListener.GetEndProgram()) {
-                if (TypedText != TextListener.GetTypedText() || Pointer != TextListener.GetPointer()) {
-                    Console.Clear();
-                    TypedText = TextListener.GetTypedText();
-                    Pointer = TextListener.GetPointer();
-                    if (Pointer >= DisplayedChats.Length) {
-                        TextListener.SetPointer(0);
-                    } else if (Pointer < 0) {
-                        TextListener.SetPointer(DisplayedChats.Length-1);
-                    }
-                    User.User.Display.With.Pointer(DisplayedChats, Pointer, TypedText);
-                }
+            if (Tuple.Item1 == 8) {
+                Multiplyer++;
+            } else if (Tuple.Item1 == 7) {
+                Multiplyer--;
             }
-            TextListener.StopListening();
-
-            // threadKeys.Join();
-
-
-
-            Multiplyer++;
         }
 
         var = Admin.Read.Users.All();
         Multiplyer = 0;
 
-        while (Pointer == 8 || Pointer == 7) {
+        while (Tuple.Item1 == 8 || Tuple.Item1 == 7) {
             for (int i = 0; i < 7; i++) {
                 if ((Multiplyer*7)+i < var.Length) {
                     DisplayedChats[i] = var[(Multiplyer*7)+i];
@@ -251,40 +149,18 @@ class Program
             DisplayedChats[7] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
             DisplayedChats[8] = "  Choose Chat to Create";
 
-            // threadKeys.Start();
+            Tuple = MenuLoop(Content, false);
 
-            TextListener.SetPointer(0);
-            TextListener.SetTypedText(" ");
-            TextListener.SetEndProgram(false);
-
-            TextListener.StartListening();
-            while (!TextListener.GetEndProgram()) {
-                if (TypedText != TextListener.GetTypedText() || Pointer != TextListener.GetPointer()) {
-                    Console.Clear();
-                    TypedText = TextListener.GetTypedText();
-                    Pointer = TextListener.GetPointer();
-                    if (Pointer >= DisplayedChats.Length) {
-                        TextListener.SetPointer(0);
-                    } else if (Pointer < 0) {
-                        TextListener.SetPointer(DisplayedChats.Length-1);
-                    }
-                    User.User.Display.With.Pointer(DisplayedChats, Pointer, TypedText);
-                }
-            }
-            TextListener.StopListening();
-
-            // threadKeys.Join();
-
-            if (Pointer == 7) {
+            if (Tuple.Item1 == 7) {
                 Multiplyer++;
             } else {
-                CurrentUser.Generate_Chat(DisplayedChats[Pointer]);
+                CurrentUser.Generate_Chat(DisplayedChats[Tuple.Item1]);
             }
         }
 
 
 
-        string SelectedChat = DisplayedChats[Pointer];
+        string SelectedChat = DisplayedChats[Tuple.Item1];
 
         SelectedChat = CurrentUser.Read_Messages_FileName(SelectedChat);
 
@@ -367,107 +243,50 @@ class Program
 
             // Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content)
         }
+    }
 
 
 
-        // User.Write_Messages_Chat(SymmetricKey, SelectedChat, "hello, this is a new message");
+    public static Tuple<int, string> MenuLoop(string[] Content, bool GetTypedText = true) {
+
+        DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
+        string TypedText = "";
+        int Pointer = int.MaxValue;
+
+        TextListener.SetPointer(0);
+        TextListener.SetTypedText("  ");
+        TextListener.SetEndProgram(false);
 
 
 
+        TextListener.StartListening();
+        while (!TextListener.GetEndProgram()) {
 
+            if (
+                Pointer != TextListener.GetPointer()
+                ||
+                TypedText != TextListener.GetTypedText()
+            ) {
+                
+                Pointer = TextListener.GetPointer();
+                TypedText = TextListener.GetTypedText();
 
+                if (Pointer >= Content.Length) {
+                    TextListener.SetPointer(0);
+                } else if (Pointer < 0) {
+                    TextListener.SetPointer(Content.Length-1);
+                }
 
+                if (Content.Length > 1) {
+                    User.User.Display.With.Pointer(Content, Pointer);
+                } else if (GetTypedText) {
+                    User.User.Display.Content(Content, TypedText);
+                }
 
-
-
-
-
-
-
-
-
-/*
-DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
-
-string TypedText = "";
-int Pointer = int.MaxValue;
-
-Thread threadKeys = new Thread(() => {
-    TextListener.StartListening();
-});
-
-threadKeys.Start();
-
-while (!TextListener.GetEndProgram()) {
-    if (TypedText != TextListener.GetTypedText() || Pointer != TextListener.GetPointer()) {
-            TypedText = TextListener.GetTypedText();
-            Pointer = TextListener.GetPointer();
-        if (Pointer >= Content.Length) {
-            TextListener.SetPointer(0);
-        } else if (Pointer < 0) {
-            TextListener.SetPointer(Content.Length-1);
+            }
         }
-        User.Display.With.Pointer(Content, Pointer, TypedText);
+        TextListener.StopListening();
+
+        return new Tuple<int, string>(Pointer, TypedText);
     }
-}
-
-TextListener.SetPointer(0);
-TextListener.SetTypedText(" ");
-TextListener.SetEndProgram(false);
-
-while (!TextListener.GetEndProgram()) {
-    if (TypedText != TextListener.GetTypedText()) {
-        TypedText = TextListener.GetTypedText();
-        Pointer = TextListener.GetPointer();
-        User.Display.Content(Content, TypedText);
-    }
-}
-*/      
-
-
-
-
-
-
-
-
-
-
-
-        //User.Read_Messages_Chat();
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //User CurrentUser = new User("luigi", "player2", "luigi");
-
-
-
-        //string[] var = CurrentUser.Read_Chats_Allowed(@"chats\");
-
-            // //System.Threading.Thread.Sleep(5000);
-
-        //User.Display.Messages(var);
-
-        //Console.WriteLine(Chat.Read.Messages.FileName(CurrentUser.Name, var[0]));
-
-        // while (true) 
-        // {
-            // Console.Write("the end is never");
-            // Console.ReadKey(false);
-        // } */
-    }
-
-
-
-    
 }

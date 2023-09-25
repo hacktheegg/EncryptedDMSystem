@@ -19,13 +19,11 @@ using User;
 
 class Program
 {
-    static void Main(string[] args)
-    {
+    static void Main(string[] args) {
+        int BoardWidth = 20;
+        int BoardHeight = 20;
 
-        DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
 
-        string TypedText = "";
-        // int Pointer = int.MaxValue;
 
 
 
@@ -113,26 +111,33 @@ class Program
             goto Start;
         }
 
+        Console.WriteLine("Correct Password");
+
 
         string[] var = CurrentUser.Read_Chats_Allowed(@"chats\");
-        string[] DisplayedChats = new string[9];
 
         int Multiplyer = 0;
+        int Step = BoardHeight-6;
+        
+        string[] DisplayedChats = new string[Step+2];
 
-        while (Multiplyer == 0 || Tuple.Item1 == 7 || Tuple.Item1 == 8) {
-            for (int i = 0; i < 7; i++) {
-                if ((Multiplyer*7)+i < var.Length) {
-                    DisplayedChats[i] = var[(Multiplyer*7)+i];
-                } if ((Multiplyer*7)+i >= var.Length) { DisplayedChats[i] = "{EMPTY}"; }
+        while (Multiplyer == 0 || Tuple.Item1 == Step || Tuple.Item1 == Step+1) {
+            for (int i = 0; i < Step; i++) {
+                if ((Multiplyer*Step)+i < var.Length) {
+                    DisplayedChats[i] = var[(Multiplyer*Step)+i];
+                }
+                if ((Multiplyer*Step)+i >= var.Length) {
+                    DisplayedChats[i] = "{EMPTY}";
+                }
             }
-            DisplayedChats[7] = "Previous";
-            DisplayedChats[8] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
+            DisplayedChats[Step] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
+            DisplayedChats[Step+1] = "Previous";
 
-            Tuple = MenuLoop(Content, false);
+            Tuple = MenuLoop(DisplayedChats, true);
 
-            if (Tuple.Item1 == 8) {
+            if (Tuple.Item1 == Step) {
                 Multiplyer++;
-            } else if (Tuple.Item1 == 7) {
+            } else if (Tuple.Item1 == Step+1) {
                 Multiplyer--;
             }
         }
@@ -149,7 +154,7 @@ class Program
             DisplayedChats[7] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
             DisplayedChats[8] = "  Choose Chat to Create";
 
-            Tuple = MenuLoop(Content, false);
+            Tuple = MenuLoop(DisplayedChats, true);
 
             if (Tuple.Item1 == 7) {
                 Multiplyer++;
@@ -176,73 +181,9 @@ class Program
 
 
 
-        /* Utilities.KeyListener KeyListener = new Utilities.KeyListener();
+        PrivateChatLoop(SelectedChat, CurrentUser, SymmetricKey);
 
-        Thread threadKeys = new Thread(() =>
-        {
-            KeyListener.StartListening();
-        }); */
-
-        DMSExtras.DMSExtras.ChatListener ChatListener = new DMSExtras.DMSExtras.ChatListener();
-
-        Thread threadChat = new Thread(() =>
-        {
-            ChatListener.StartListening(SelectedChat);
-        });
-
-        threadChat.Start();
         
-        // threadKeys.Start();
-
-        TypedText = ""; // Move this declaration outside the while loop
-        string[] ChatMessages = {"TEMPVALUE", "TEMPVALUE"};
-
-        TextListener.SetPointer(0);
-        TextListener.SetTypedText(" ");
-        TextListener.SetEndProgram(false);
-
-        TextListener.StartListening();
-        while (true)
-        {
-
-            Thread.Sleep(100); // Sleep for a short duration to avoid excessive CPU usage
-
-            //Console.WriteLine(KeyListener.GetTypedText().ToLower() + "\n" + TypedText);
-                
-            //for (int i = 0; i < ChatMessages.Length; i++) { Console.WriteLine(ChatMessages[i]); }
-            //Console.WriteLine("eeee");
-            //for (int i = 0; i < ChatListener.GetChatContent().Length; i++) { Console.WriteLine(ChatListener.GetChatContent()[i]); }
-            //Console.WriteLine("eeee");
-
-            if (TextListener.GetEndProgram()) {
-                if (!string.IsNullOrEmpty(TypedText)) {
-                    // Console.WriteLine(Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(TypedText)));
-
-                    if (BadWords.BadWords.list.Any(TypedText.Contains)) {
-                        Console.WriteLine("bad Word Found, Message not Sent");
-                        System.Threading.Thread.Sleep(1000);
-                    } else {
-                    CurrentUser.Write_Messages_Chat(SymmetricKey, SelectedChat, TypedText);
-
-                    TextListener.StopListening();
-                    TextListener.SetTypedText("");
-                    TextListener.SetEndProgram(false);
-                    TextListener.StartListening();
-                    }
-                }
-            }
-
-            if ((TypedText != TextListener.GetTypedText()) || !ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
-
-                TypedText = TextListener.GetTypedText();
-                ChatMessages = ChatListener.GetChatContent();
-
-                User.User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),TypedText,true);
-            }
-
-
-            // Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content)
-        }
     }
 
 
@@ -288,5 +229,63 @@ class Program
         TextListener.StopListening();
 
         return new Tuple<int, string>(Pointer, TypedText);
+    }
+
+    public static void PrivateChatLoop(string SelectedChat, User.User CurrentUser, Tuple<string, string> SymmetricKey) {
+        DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
+        DMSExtras.DMSExtras.ChatListener ChatListener = new DMSExtras.DMSExtras.ChatListener();
+
+        string TypedText = " ";
+
+        Thread threadChat = new Thread(() =>
+        {
+            ChatListener.StartListening(SelectedChat);
+        });
+
+        threadChat.Start();
+        
+        // threadKeys.Start();
+
+        TypedText = ""; // Move this declaration outside the while loop
+        string[] ChatMessages = {"TEMPVALUE", "TEMPVALUE"};
+
+        TextListener.SetPointer(0);
+        TextListener.SetTypedText(" ");
+        TextListener.SetEndProgram(false);
+
+        TextListener.StartListening();
+        while (true)
+        {
+
+            Thread.Sleep(100);
+
+            if (TextListener.GetEndProgram()) {
+                if (!string.IsNullOrEmpty(TypedText)) {
+                    
+                    if (BadWords.BadWords.list.Any(TypedText.Contains)) {
+                        Console.WriteLine("bad Word Found, Message not Sent");
+                        System.Threading.Thread.Sleep(1000);
+                    } else {
+                    CurrentUser.Write_Messages_Chat(SymmetricKey, SelectedChat, TypedText);
+
+                    TextListener.StopListening();
+                    TextListener.SetTypedText("");
+                    TextListener.SetEndProgram(false);
+                    TextListener.StartListening();
+                    }
+                }
+            }
+
+            if ((TypedText != TextListener.GetTypedText()) || !ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
+
+                TypedText = TextListener.GetTypedText();
+                ChatMessages = ChatListener.GetChatContent();
+
+                User.User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),TypedText,true);
+            }
+
+
+            // Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content)
+        }
     }
 }

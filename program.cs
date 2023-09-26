@@ -19,11 +19,12 @@ using User;
 
 class Program
 {
-    static void Main(string[] args) {
-        int BoardWidth = 20;
-        int BoardHeight = 20;
+    static void Main(string[] args)
+    {
+        int BoardWidth = 25;
+        int BoardHeight = 25;
 
-
+        Tuple<int,int> BoardDimensions = new Tuple<int, int>(BoardWidth, BoardHeight);
 
 
 
@@ -31,7 +32,7 @@ class Program
 
         new User.User("BugReport", "BugReport", "BugReport").Generate();
         User.User TempUser = new User.User("BugReport", "BugReport", "BugReport");
-        TempUser.Generate_Chat("BugReport");
+        //TempUser.Generate_Chat("BugReport");
 
         
 
@@ -51,7 +52,7 @@ class Program
 
         string[] Content = new string[3]{"Login", "New", "Public Room (404 not found)"};
 
-        Tuple<int, string> Tuple = MenuLoop(Content, false);
+        Tuple<int, string> Tuple = MenuLoop(Content, BoardDimensions, false);
 
 
         if (Tuple.Item1 == 1) {
@@ -62,7 +63,7 @@ class Program
             
             Content = new string[1]{"New Account Username: "};
 
-            Tuple = MenuLoop(Content, true);
+            Tuple = MenuLoop(Content, BoardDimensions, true);
 
             if (BadWords.BadWords.list.Any(Tuple.Item2.Contains)) {
                 Console.WriteLine("bad Word Found, Redo Step");
@@ -74,7 +75,7 @@ class Program
 
             Content = new string[1]{"New Account Password: "};
             
-            Tuple = MenuLoop(Content, true);
+            Tuple = MenuLoop(Content, BoardDimensions, true);
 
             TempPassword = Tuple.Item2;
 
@@ -92,13 +93,14 @@ class Program
 
         Content = new string[1]{"Username"};
 
-        Tuple = MenuLoop(Content, true);
+        Tuple = MenuLoop(Content, BoardDimensions, true);
         
         string Username = Tuple.Item2;
 
         Content = new string[1]{"Password (Do Not Share)"};
 
-        Tuple = MenuLoop(Content, true);
+        Tuple = MenuLoop(Content, BoardDimensions, true);
+
 
         string Password = Tuple.Item2;
 
@@ -114,15 +116,19 @@ class Program
         Console.WriteLine("Correct Password");
 
 
+        ChooseChat:
+        bool ChooseChatLoop = true;
+
         string[] var = CurrentUser.Read_Chats_Allowed(@"chats\");
 
         int Multiplyer = 0;
-        int Step = BoardHeight-6;
+        int Step = BoardDimensions.Item2-6;
         
         string[] DisplayedChats = new string[Step+2];
 
-        while (Multiplyer == 0 || Tuple.Item1 == Step || Tuple.Item1 == Step+1) {
-            for (int i = 0; i < Step; i++) {
+        while (ChooseChatLoop || Tuple.Item1 == Step || Tuple.Item1 == Step+1) {
+            ChooseChatLoop = false;
+            for (int i = 0; i < Step-1; i++) {
                 if ((Multiplyer*Step)+i < var.Length) {
                     DisplayedChats[i] = var[(Multiplyer*Step)+i];
                 }
@@ -130,14 +136,15 @@ class Program
                     DisplayedChats[i] = "{EMPTY}";
                 }
             }
-            DisplayedChats[Step] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
             DisplayedChats[Step+1] = "Previous";
+            DisplayedChats[Step] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/Step))+")";
+            DisplayedChats[Step-1] = "New Chat";
 
-            Tuple = MenuLoop(DisplayedChats, true);
+            Tuple = MenuLoop(DisplayedChats, BoardDimensions, true);
 
             if (Tuple.Item1 == Step) {
                 Multiplyer++;
-            } else if (Tuple.Item1 == Step+1) {
+            } else if (Tuple.Item1 == Step+1 && Multiplyer > 0) {
                 Multiplyer--;
             }
         }
@@ -145,19 +152,24 @@ class Program
         var = Admin.Read.Users.All();
         Multiplyer = 0;
 
-        while (Tuple.Item1 == 8 || Tuple.Item1 == 7) {
-            for (int i = 0; i < 7; i++) {
-                if ((Multiplyer*7)+i < var.Length) {
-                    DisplayedChats[i] = var[(Multiplyer*7)+i];
-                } if ((Multiplyer*7)+i >= var.Length) { DisplayedChats[i] = "{EMPTY}"; }
+        while (Tuple.Item1 == Step-1 || Tuple.Item1 == Step || Tuple.Item1 == Step+1) {
+            for (int i = 0; i < Step-1; i++) {
+                if ((Multiplyer*Step)+i < var.Length) {
+                    DisplayedChats[i] = var[(Multiplyer*Step)+i];
+                } if ((Multiplyer*Step)+i >= var.Length) { DisplayedChats[i] = "{EMPTY}"; }
             }
-            DisplayedChats[7] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/7))+")";
-            DisplayedChats[8] = "  Choose Chat to Create";
+            DisplayedChats[Step-1] = "Go Back";
+            DisplayedChats[Step] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/Step))+")";
+            DisplayedChats[Step+1] = "Previous";
 
-            Tuple = MenuLoop(DisplayedChats, true);
+            Tuple = MenuLoop(DisplayedChats, BoardDimensions, true);
 
-            if (Tuple.Item1 == 7) {
+            if (Tuple.Item1 == Step) {
                 Multiplyer++;
+            } else if (Tuple.Item1 == Step+1) {
+                Multiplyer--;
+            } else if (Tuple.Item1 == Step-1) {
+                goto ChooseChat;
             } else {
                 CurrentUser.Generate_Chat(DisplayedChats[Tuple.Item1]);
             }
@@ -178,17 +190,17 @@ class Program
         Tuple<string, string> SymmetricKey = CurrentUser.Read_Chat_SymmetricKey(SelectedChat);
 
         
+        // while (true) { System.Threading.Thread.Sleep(5000); }
 
 
-
-        PrivateChatLoop(SelectedChat, CurrentUser, SymmetricKey);
+        PrivateChatLoop(SelectedChat, BoardDimensions, CurrentUser, SymmetricKey);
 
         
     }
 
 
 
-    public static Tuple<int, string> MenuLoop(string[] Content, bool GetTypedText = true) {
+    public static Tuple<int, string> MenuLoop(string[] Content, Tuple<int,int> BoardDimensions, bool GetTypedText = true) {
 
         DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
         string TypedText = "";
@@ -219,9 +231,9 @@ class Program
                 }
 
                 if (Content.Length > 1) {
-                    User.User.Display.With.Pointer(Content, Pointer);
+                    User.User.Display.With.Pointer(Content, BoardDimensions, Pointer);
                 } else if (GetTypedText) {
-                    User.User.Display.Content(Content, TypedText);
+                    User.User.Display.Content(Content, BoardDimensions, TypedText);
                 }
 
             }
@@ -231,7 +243,7 @@ class Program
         return new Tuple<int, string>(Pointer, TypedText);
     }
 
-    public static void PrivateChatLoop(string SelectedChat, User.User CurrentUser, Tuple<string, string> SymmetricKey) {
+    public static void PrivateChatLoop(string SelectedChat, Tuple<int, int> BoardDimensions, User.User CurrentUser, Tuple<string, string> SymmetricKey) {
         DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
         DMSExtras.DMSExtras.ChatListener ChatListener = new DMSExtras.DMSExtras.ChatListener();
 
@@ -281,7 +293,7 @@ class Program
                 TypedText = TextListener.GetTypedText();
                 ChatMessages = ChatListener.GetChatContent();
 
-                User.User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),TypedText,true);
+                User.User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),BoardDimensions,TypedText, false);
             }
 
 

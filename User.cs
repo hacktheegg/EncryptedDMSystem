@@ -96,25 +96,47 @@ namespace User
 
                 Tuple<string,string> SymmetricKey = SymmetricEncryption.GenerateKeyAndIV();
 
+                // using (StreamWriter writer = new StreamWriter(@"chats\Keys.txt"))
+                // {
+                //     writer.WriteLine(SymmetricKey.Item1);
+                //     writer.WriteLine(SymmetricKey.Item2);
+                // }
+
                 using (StreamWriter writer = new StreamWriter(@"chats\"+FileName+".txt"))
                 {
-                    writer.WriteLine(         Name+":"+ this.Key.Encrypt(SymmetricKey.Item1+":"+SymmetricKey.Item2, User.Read_User_PublicKey(Name))
-                    );
-                    //writer.WriteLine(Name);
-                    //writer.WriteLine(User.Read_User_PublicKey(Name));
-                    writer.WriteLine(this.Username+":"+ this.Key.Encrypt(SymmetricKey.Item1+":"+SymmetricKey.Item2, User.Read_User_PublicKey(this.Username))
-                    );
-                    //writer.WriteLine(this.Username);
-                    //writer.WriteLine(User.Read_User_PublicKey(this.Username));
-                    /*writer.WriteLine(
-                        SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2)
-                    );
                     writer.WriteLine(
-                        SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2)
+                        Name+
+                        ":"+// SymmetricKey.Item1+
+                        Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(
+                            this.Key.Encrypt(SymmetricKey.Item1, User.Read_User_PublicKey(Name))
+                        ))+
+                        ":"+// SymmetricKey.Item2
+                        Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(
+                            this.Key.Encrypt(SymmetricKey.Item2, User.Read_User_PublicKey(Name))
+                        ))
                     );
+
+                    // User.Read_User_PublicKey(this.Username);
+
                     writer.WriteLine(
-                        SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2)
-                    );*/
+                        this.Username+
+                        ":"+// SymmetricKey.Item1+
+                        Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(
+                            this.Key.Encrypt(SymmetricKey.Item1, User.Read_User_PublicKey(this.Username))
+                        ))+
+                        ":"+// SymmetricKey.Item2
+                        Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(
+                            this.Key.Encrypt(SymmetricKey.Item2, User.Read_User_PublicKey(this.Username))
+                        ))
+                    );
+
+                    // User.Read_User_PublicKey(Name);
+                }
+
+                using (StreamWriter writer = new StreamWriter(@"chats\Write.txt"))
+                {
+                    writer.WriteLine(SymmetricKey.Item1);
+                    writer.WriteLine(SymmetricKey.Item2);
                 }
             }
             public static void Generate_Database() {
@@ -159,36 +181,6 @@ namespace User
             }
 
             return ReturnVal;
-
-            /*
-            string[] returnVal = new string[ChatNames.Length];
-
-            int j = 0;
-
-            int LengthVar = ChatNames.Length;
-
-            for (int i = 0; i < ChatNames.Length; i++) {
-                if (ChatNames[i].Contains(this.Username)) {
-                    if (ChatNames[i][0] == this.Username) {
-                        returnVal[j] = ChatNames[i][1];
-                    }else if (ChatNames[i][1] == this.Username) {
-                        returnVal[j] = ChatNames[i][0];
-                    }
-                } else {
-                    returnVal[j] = "{RESTRICTEDCHATROOM}";
-                    if (LengthVar > i) {
-                        LengthVar = i;
-                    }
-                }
-                j++;
-            }
-
-            string[] NewVal = new string[LengthVar];
-
-            for (int i = 0; i < LengthVar; i++) {
-                NewVal[i] = returnVal[i];
-            }
-            */
         }
         public string Read_Messages_FileName(string TargetChat) {
 
@@ -231,22 +223,73 @@ namespace User
             return DecryptedMessages;
         }
 
+
+
+
+
         public Tuple<string, string> Read_Chat_SymmetricKey(string SelectedChat) {
+            System.Threading.Thread.Sleep(500);
             string SymmetricKey;
             string iv;
 
             string[] EncryptedMessages = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
 
+            // SymmetricKey = EncryptedMessages[0];
+            // iv = EncryptedMessages[1];
+
             if (EncryptedMessages[0].StartsWith(this.Username)) {
-                SymmetricKey = this.Key.Decrypt(EncryptedMessages[0].Split(':')[1], this.Key.Private).Split(':')[0];
-                iv = this.Key.Decrypt(EncryptedMessages[0].Split(':')[1], this.Key.Private).Split(':')[1];
+
+                SymmetricKey = EncryptedMessages[0].Split(':')[1];
+
+                iv = EncryptedMessages[0].Split(':')[2];
+
             } else {
-                SymmetricKey = this.Key.Decrypt(EncryptedMessages[1].Split(':')[1], this.Key.Private).Split(':')[0];
-                iv = this.Key.Decrypt(EncryptedMessages[1].Split(':')[1], this.Key.Private).Split(':')[1];
+                
+                SymmetricKey = EncryptedMessages[1].Split(':')[1];
+
+                iv = EncryptedMessages[1].Split(':')[2];
+
+            }
+
+
+
+            byte[] encryptedData = Encode.HexStringToByteArray(SymmetricKey);
+            string encryptedDataString = Convert.ToBase64String(encryptedData);
+            string decryptedData = this.Key.Decrypt(encryptedDataString, this.Key.Private);
+            SymmetricKey = decryptedData;
+
+            encryptedData = Encode.HexStringToByteArray(iv);
+            encryptedDataString = Convert.ToBase64String(encryptedData);
+            decryptedData = this.Key.Decrypt(encryptedDataString, this.Key.Private);
+            iv = decryptedData;
+
+
+
+
+            // SymmetricKey = Encoding.ASCII.GetString(Encode.HexStringToByteArray(SymmetricKey));
+            
+            // iv = Encoding.ASCII.GetString(Encode.HexStringToByteArray(iv));
+
+            // SymmetricKey = this.Key.Decrypt(SymmetricKey, this.Key.Private);
+
+            // iv = this.Key.Decrypt(iv, this.Key.Private);
+
+
+            // Console.WriteLine(SymmetricKey);
+            // Console.WriteLine(iv);
+
+            using (StreamWriter writer = new StreamWriter(@"chats\Read.txt"))
+            {
+                writer.WriteLine(SymmetricKey);
+                writer.WriteLine(iv);
             }
 
             return new Tuple<string,string>(SymmetricKey,iv);
         }
+
+
+
+
 
         public void Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content) {
             //SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2);
@@ -269,6 +312,10 @@ namespace User
                 //System.Threading.Thread.Sleep(5000);
                 string TempString = rdr.GetString(0);
                 rdr.Close();
+                Console.WriteLine(TempString);
+                // System.Threading.Thread.Sleep(5000);
+                // System.Threading.Thread.Sleep(5000);
+                // System.Threading.Thread.Sleep(5000);
                 return TempString;
             }
             else 
@@ -284,9 +331,9 @@ namespace User
         {
             public class With
             {
-                public static void Pointer(string[] Content, int pointer, string TypedText = "") {
-                    Board Board = new Board(20, 20);
-                    Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
+                public static void Pointer(string[] Content, Tuple<int, int> BoardDimensions, int pointer, string TypedText = "") {
+                    Board Board = new Board(BoardDimensions.Item1, BoardDimensions.Item2);
+                    Board = Square.Create(new Square(Board.Width,Board.Height,Tuple.Create(0,0)), Board);
 
                     // Text Text = new Text(Tuple.Create(0,0), "");
 
@@ -309,9 +356,9 @@ namespace User
                 }
 
             }
-            public static void Content(string[] Content, string TypedText = "", bool IfChat = false) {
-                Board Board = new Board(20, 20);
-                Board = Square.Create(new Square(20,20,Tuple.Create(0,0)), Board);
+            public static void Content(string[] Content, Tuple<int, int> BoardDimensions, string TypedText = "", bool IfChat = false) {
+                Board Board = new Board(BoardDimensions.Item1, BoardDimensions.Item2);
+                Board = Square.Create(new Square(Board.Width,Board.Height,Tuple.Create(0,0)), Board);
                 
                 if (IfChat) {
                     for (int i = Content.Length-1; i >= 0; i--) {

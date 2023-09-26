@@ -1,4 +1,21 @@
-hexadecimalise program.cs, function, line 218, Generate_Chat()
+~hexadecimalise program.cs, function, line 218, Generate_Chat()~ (postponed)
+
+
+
+() = encrypted
+[] = base64
+{} = hex
+var = var
+
+
+
+name
+:
+{(key)}
+:
+{(iv)}
+
+
 
 
 

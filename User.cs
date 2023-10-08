@@ -69,7 +69,7 @@ namespace User
 
 
 
-        public void Generate() {
+        public void Generate(int Width = 25, int Height = 25) {
             if (User.Exists(this.Username)) {
                 return;
             }
@@ -79,7 +79,7 @@ namespace User
             SQLiteConnection connection = new SQLiteConnection(connectionString);
             connection.Open();
 
-            string sqlCommand = "INSERT INTO Main (Username, PublicKey) VALUES ('"+this.Username+"', '"+this.Key.Public+"');";
+            string sqlCommand = "INSERT INTO Main (Username, PublicKey, Width, Height) VALUES ('"+this.Username+"', '"+this.Key.Public+"', '"+Width+"', '"+Height+"');";
             SQLiteCommand command = new SQLiteCommand(sqlCommand, connection);
 
             command = new SQLiteCommand(sqlCommand, connection);
@@ -88,6 +88,7 @@ namespace User
             connection.Close();
         }
             public void Generate_Chat(string Name) {
+
                 string Name1Hex = Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(this.Username));
                 string Name2Hex = Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Name));
 
@@ -106,38 +107,30 @@ namespace User
                 {
                     writer.WriteLine(
                         Name+
-                        ":"+// SymmetricKey.Item1+
-                        Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(
-                            this.Key.Encrypt(SymmetricKey.Item1, User.Read_User_PublicKey(Name))
-                        ))+
-                        ":"+// SymmetricKey.Item2
-                        Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(
-                            this.Key.Encrypt(SymmetricKey.Item2, User.Read_User_PublicKey(Name))
-                        ))
+                        ":"+
+                        this.Key.Encrypt(SymmetricKey.Item1, User.Read_User_PublicKey(Name))+
+                        ":"+
+                        this.Key.Encrypt(SymmetricKey.Item2, User.Read_User_PublicKey(Name))
                     );
 
                     // User.Read_User_PublicKey(this.Username);
 
                     writer.WriteLine(
                         this.Username+
-                        ":"+// SymmetricKey.Item1+
-                        Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(
-                            this.Key.Encrypt(SymmetricKey.Item1, User.Read_User_PublicKey(this.Username))
-                        ))+
-                        ":"+// SymmetricKey.Item2
-                        Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(
-                            this.Key.Encrypt(SymmetricKey.Item2, User.Read_User_PublicKey(this.Username))
-                        ))
+                        ":"+
+                        this.Key.Encrypt(SymmetricKey.Item1, User.Read_User_PublicKey(Name))+
+                        ":"+
+                        this.Key.Encrypt(SymmetricKey.Item2, User.Read_User_PublicKey(Name))
                     );
 
                     // User.Read_User_PublicKey(Name);
                 }
 
-                using (StreamWriter writer = new StreamWriter(@"chats\Write.txt"))
-                {
-                    writer.WriteLine(SymmetricKey.Item1);
-                    writer.WriteLine(SymmetricKey.Item2);
-                }
+                // using (StreamWriter writer = new StreamWriter(@"chats\Write.txt"))
+                // {
+                //     writer.WriteLine(SymmetricKey.Item1);
+                //     writer.WriteLine(SymmetricKey.Item2);
+                // }
             }
             public static void Generate_Database() {
                 while (!System.IO.File.Exists("UserList.db"))
@@ -146,7 +139,7 @@ namespace User
                     SQLiteConnection connection = new SQLiteConnection(connectionString);
                     connection.Open();
 
-                    string query = "CREATE TABLE Main (Username TEXT, PublicKey TEXT)";
+                    string query = "CREATE TABLE Main (Username TEXT, PublicKey TEXT, Width INTEGER, Height INTEGER)";
                     SQLiteCommand command = new SQLiteCommand(query, connection);
                     command.ExecuteNonQuery();
                     connection.Close();
@@ -243,24 +236,26 @@ namespace User
 
                 iv = EncryptedMessages[0].Split(':')[2];
 
+                // Console.WriteLine(EncryptedMessages[0]);
+
             } else {
                 
                 SymmetricKey = EncryptedMessages[1].Split(':')[1];
 
                 iv = EncryptedMessages[1].Split(':')[2];
 
+                // Console.WriteLine(EncryptedMessages[1]);
+
             }
 
 
 
-            byte[] encryptedData = Encode.HexStringToByteArray(SymmetricKey);
-            string encryptedDataString = Convert.ToBase64String(encryptedData);
-            string decryptedData = this.Key.Decrypt(encryptedDataString, this.Key.Private);
+            string encryptedData = SymmetricKey;
+            string decryptedData = this.Key.Decrypt(encryptedData, this.Key.Private);
             SymmetricKey = decryptedData;
 
-            encryptedData = Encode.HexStringToByteArray(iv);
-            encryptedDataString = Convert.ToBase64String(encryptedData);
-            decryptedData = this.Key.Decrypt(encryptedDataString, this.Key.Private);
+            encryptedData = iv;
+            decryptedData = this.Key.Decrypt(encryptedData, this.Key.Private);
             iv = decryptedData;
 
 
@@ -278,11 +273,11 @@ namespace User
             // Console.WriteLine(SymmetricKey);
             // Console.WriteLine(iv);
 
-            using (StreamWriter writer = new StreamWriter(@"chats\Read.txt"))
-            {
-                writer.WriteLine(SymmetricKey);
-                writer.WriteLine(iv);
-            }
+            // using (StreamWriter writer = new StreamWriter(@"chats\Read.txt"))
+            // {
+            //     writer.WriteLine(SymmetricKey);
+            //     writer.WriteLine(iv);
+            // }
 
             return new Tuple<string,string>(SymmetricKey,iv);
         }
@@ -312,7 +307,7 @@ namespace User
                 //System.Threading.Thread.Sleep(5000);
                 string TempString = rdr.GetString(0);
                 rdr.Close();
-                Console.WriteLine(TempString);
+                // Console.WriteLine(TempString);
                 // System.Threading.Thread.Sleep(5000);
                 // System.Threading.Thread.Sleep(5000);
                 // System.Threading.Thread.Sleep(5000);
@@ -387,6 +382,10 @@ namespace User
             {
 
                 public static string[][] All(string folder) {
+                    if (!Directory.Exists(folder)) {
+                        Directory.CreateDirectory(folder);
+                        System.Threading.Thread.Sleep(100);
+                    }
                     FileInfo[] files = new DirectoryInfo(folder).GetFiles("*.txt");
 
                     string[] fileNames = new string[files.Length];

@@ -269,7 +269,7 @@ class Program
         while (true)
         {
 
-            Thread.Sleep(100);
+            Thread.Sleep(50);
 
             if (TextListener.GetEndProgram()) {
                 if (!string.IsNullOrEmpty(TypedText)) {
@@ -288,16 +288,13 @@ class Program
                 }
             }
 
-            if ((TypedText != TextListener.GetTypedText()) || !ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
+            //if (TypedText != TextListener.GetTypedText() || ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
 
                 TypedText = TextListener.GetTypedText();
                 ChatMessages = ChatListener.GetChatContent();
 
-                User.User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),BoardDimensions,TypedText, false);
-            }
-
-
-            // Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content)
+                User.User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),BoardDimensions,TypedText, true);
+            //}
         }
     }
 }

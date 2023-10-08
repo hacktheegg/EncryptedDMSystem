@@ -327,6 +327,7 @@ namespace DMSExtras
             private readonly object lockObject = new object();
 
             public string[] GetChatContent() {
+                Thread.Sleep(50);
                 lock (lockObject) {
                     return ChatContent;
                 }
@@ -335,10 +336,12 @@ namespace DMSExtras
             public void StartListening(string ChatRoom) {
 
                 while (true) {
-                    
-                    ChatContent = File.ReadLines(@"chats\"+ChatRoom+".txt").ToArray();
-
-                    System.Threading.Thread.Sleep(100);
+                    Thread.Sleep(50);
+                    try {
+                        ChatContent = File.ReadLines(@"chats\"+ChatRoom+".txt").ToArray();
+                    } catch {
+                        Console.Write("");
+                    }
                 }
             }
         }

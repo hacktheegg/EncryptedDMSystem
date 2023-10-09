@@ -182,12 +182,14 @@ class Program
         SelectedChat = CurrentUser.Read_Messages_FileName(SelectedChat);
 
 
+        string[] ChatContent = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
 
-        string[] DecryptedChatContent = CurrentUser.Read_Messages_Chat(SelectedChat);
+
+        string[] DecryptedChatContent = CurrentUser.Read_Messages_Chat(ChatContent);
 
         //User.Display.Content(DecryptedChatContent);
 
-        Tuple<string, string> SymmetricKey = CurrentUser.Read_Chat_SymmetricKey(SelectedChat);
+        Tuple<string, string> SymmetricKey = CurrentUser.Read_Chat_SymmetricKey(ChatContent);
 
         
         // while (true) { System.Threading.Thread.Sleep(5000); }
@@ -261,6 +263,8 @@ class Program
         TypedText = ""; // Move this declaration outside the while loop
         string[] ChatMessages = {"TEMPVALUE", "TEMPVALUE"};
 
+        string[] DecryptedMessages = {"TEMPVALUE", "TEMPVALUE"};
+
         TextListener.SetPointer(0);
         TextListener.SetTypedText(" ");
         TextListener.SetEndProgram(false);
@@ -268,33 +272,54 @@ class Program
         TextListener.StartListening();
         while (true)
         {
-
+            // Console.WriteLine("start");
             Thread.Sleep(50);
 
-            if (TextListener.GetEndProgram()) {
-                if (!string.IsNullOrEmpty(TypedText)) {
+            if (TextListener.GetEndProgram() && !string.IsNullOrEmpty(TypedText)) {
                     
                     if (BadWords.BadWords.list.Any(TypedText.Contains)) {
                         Console.WriteLine("bad Word Found, Message not Sent");
                         System.Threading.Thread.Sleep(1000);
                     } else {
-                    CurrentUser.Write_Messages_Chat(SymmetricKey, SelectedChat, TypedText);
+                        CurrentUser.Write_Messages_Chat(SymmetricKey, SelectedChat, TypedText);
 
-                    TextListener.StopListening();
-                    TextListener.SetTypedText("");
-                    TextListener.SetEndProgram(false);
-                    TextListener.StartListening();
+                        TextListener.StopListening();
+                        TextListener.SetTypedText("");
+                        TextListener.SetEndProgram(false);
+                        TextListener.StartListening();
                     }
-                }
             }
 
-            //if (TypedText != TextListener.GetTypedText() || ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
+            if (TypedText != TextListener.GetTypedText()) {
+
+                // Console.WriteLine("text start");
 
                 TypedText = TextListener.GetTypedText();
-                ChatMessages = ChatListener.GetChatContent();
 
-                User.User.Display.Content(CurrentUser.Read_Messages_Chat(SelectedChat),BoardDimensions,TypedText, true);
-            //}
+                User.User.Display.Content(DecryptedMessages,BoardDimensions,TypedText, true);
+                // Console.WriteLine("text end");
+            
+            }
+
+            // Console.WriteLine("line");
+            // Console.WriteLine(ChatMessages.Length);
+            // Console.WriteLine("line");
+            // Console.WriteLine(ChatListener.GetChatContent());
+            // Console.WriteLine("line");
+
+            if (!ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
+
+                // Console.WriteLine("chat start");
+
+                ChatMessages = ChatListener.GetChatContent();
+                DecryptedMessages = CurrentUser.Read_Messages_Chat(ChatMessages);
+
+
+                User.User.Display.Content(DecryptedMessages,BoardDimensions,TypedText, true);
+                // Console.WriteLine("chat end");
+
+            }
+            // Console.WriteLine("end");
         }
     }
 }

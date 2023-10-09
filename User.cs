@@ -195,11 +195,11 @@ namespace User
             }
         }
 
-        public string[] Read_Messages_Chat(string Chat) {
-            string[] DecryptedMessages = new string[File.ReadLines(@"chats\"+Chat+".txt").ToArray().Length-2];
+        public string[] Read_Messages_Chat(string[] EncryptedMessages) {
+            string[] DecryptedMessages = new string[EncryptedMessages.Length-2];
 
             
-            Tuple<string,string> SymmetricKey = this.Read_Chat_SymmetricKey(Chat);
+            Tuple<string,string> SymmetricKey = this.Read_Chat_SymmetricKey(EncryptedMessages);
             
 
             // for (int i = File.ReadLines(@"chats\"+Chat+".txt").ToArray().Length-1; i >= 2; i--) {
@@ -207,9 +207,9 @@ namespace User
             // }
 
 
-            for (int i = 2; i < File.ReadLines(@"chats\"+Chat+".txt").ToArray().Length; i++) {
+            for (int i = 2; i < EncryptedMessages.Length; i++) {
 
-                DecryptedMessages[i-2] = SymmetricEncryption.DecryptString(SymmetricKey.Item1, File.ReadLines(@"chats\"+Chat+".txt").ToArray()[i], SymmetricKey.Item2);
+                DecryptedMessages[i-2] = SymmetricEncryption.DecryptString(SymmetricKey.Item1, EncryptedMessages[i], SymmetricKey.Item2);
 
             }
 
@@ -220,12 +220,12 @@ namespace User
 
 
 
-        public Tuple<string, string> Read_Chat_SymmetricKey(string SelectedChat) {
+        public Tuple<string, string> Read_Chat_SymmetricKey(string[] EncryptedMessages) {
             System.Threading.Thread.Sleep(500);
             string SymmetricKey;
             string iv;
 
-            string[] EncryptedMessages = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
+            //string[] EncryptedMessages = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
 
             // SymmetricKey = EncryptedMessages[0];
             // iv = EncryptedMessages[1];

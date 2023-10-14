@@ -115,6 +115,7 @@ class Program
 
         Console.WriteLine("Correct Password");
 
+        BoardDimensions = CurrentUser.Read_User_BoardSettings();
 
         ChooseChat:
         bool ChooseChatLoop = true;
@@ -300,12 +301,6 @@ class Program
                 // Console.WriteLine("text end");
             
             }
-
-            // Console.WriteLine("line");
-            // Console.WriteLine(ChatMessages.Length);
-            // Console.WriteLine("line");
-            // Console.WriteLine(ChatListener.GetChatContent());
-            // Console.WriteLine("line");
 
             if (!ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
 

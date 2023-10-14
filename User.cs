@@ -118,9 +118,9 @@ namespace User
                     writer.WriteLine(
                         this.Username+
                         ":"+
-                        this.Key.Encrypt(SymmetricKey.Item1, User.Read_User_PublicKey(Name))+
+                        this.Key.Encrypt(SymmetricKey.Item1, User.Read_User_PublicKey(this.Username))+
                         ":"+
-                        this.Key.Encrypt(SymmetricKey.Item2, User.Read_User_PublicKey(Name))
+                        this.Key.Encrypt(SymmetricKey.Item2, User.Read_User_PublicKey(this.Username))
                     );
 
                     // User.Read_User_PublicKey(Name);
@@ -208,9 +208,7 @@ namespace User
 
 
             for (int i = 2; i < EncryptedMessages.Length; i++) {
-
                 DecryptedMessages[i-2] = SymmetricEncryption.DecryptString(SymmetricKey.Item1, EncryptedMessages[i], SymmetricKey.Item2);
-
             }
 
             return DecryptedMessages;
@@ -322,6 +320,33 @@ namespace User
             }
         }
 
+        public Tuple<int, int> Read_User_BoardSettings() {
+            string User = this.Username;
+            var conn = new SQLiteConnection(@"Data Source=UserList.db;Version=3;");
+            conn.Open();
+
+            string stm = "SELECT Width, Height FROM Main WHERE Username = @username";
+            var cmd = new SQLiteCommand(stm, conn);
+            cmd.Parameters.AddWithValue("@username", User);
+
+            SQLiteDataReader rdr = cmd.ExecuteReader();
+
+            if (rdr.Read())
+            {
+                //string TempString2 = rdr.GetString(0);
+                Tuple<int, int> BoardDimensions = new Tuple<int, int>(rdr.GetInt32(0), rdr.GetInt32(1));
+                rdr.Close();
+                return BoardDimensions;
+            }
+            else 
+            {
+                while (true) {
+                    Console.WriteLine("error at chat Read_User_BoardSettings (Width)");
+                    Console.Read();
+                }
+            }
+        }
+
         public class Display
         {
             public class With
@@ -356,8 +381,33 @@ namespace User
                 Board = Square.Create(new Square(Board.Width,Board.Height,Tuple.Create(0,0)), Board);
                 
                 if (IfChat) {
-                    for (int i = Content.Length-1; i >= 0; i--) {
-                        Board = Text.Create(new Text(Tuple.Create(2,2-(i-(Content.Length-1))), Content[i]), Board);
+                    int Interval = (BoardDimensions.Item1-3)*2; // your interval
+                    List<string> DisplayedMessages = new List<string>(); // we use a List for simplicity, you can convert it to an array later
+
+                    foreach (string message in Content)
+                    {
+                        if (message.Length > Interval)
+                        {
+                            int startIndex = 0;
+                            while (startIndex < message.Length)
+                            {
+                                int length = Math.Min(Interval, message.Length - startIndex);
+                                DisplayedMessages.Add(message.Substring(startIndex, length));
+                                startIndex += length;
+                            }
+                        }
+                        else
+                        {
+                            DisplayedMessages.Add(message);
+                        }
+                    }
+
+                    string[] DisplayedMessagesArray = DisplayedMessages.ToArray(); // if you need an array
+                    Array.Reverse(DisplayedMessagesArray);
+
+                    int VerticalBorder = 5;
+                    for (int i = 0; (i < BoardDimensions.Item2 - VerticalBorder) && (i < DisplayedMessagesArray.Length); i++) {
+                        Board = Text.Create(new Text(Tuple.Create(2,2+i), DisplayedMessagesArray[i]), Board);
                     }
                 } else {
                     for (int i = 0; i < Content.Length; i++) {

@@ -50,7 +50,7 @@ class Program
         Start:
         
 
-        string[] Content = new string[3]{"Login", "New", "Public Room (404 not found)"};
+        string[] Content = new string[2]{"Login", "New"};
 
         Tuple<int, string> Tuple = MenuLoop(Content, BoardDimensions, false);
 
@@ -66,8 +66,8 @@ class Program
             Tuple = MenuLoop(Content, BoardDimensions, true);
 
             if (BadWords.BadWords.list.Any(Tuple.Item2.Contains)) {
-                Console.WriteLine("bad Word Found, Redo Step");
-                System.Threading.Thread.Sleep(5000);
+                Console.WriteLine("bad Word Found, Redo Step (wait a sec)");
+                System.Threading.Thread.Sleep(3000);
                 goto BadNameUsername;
             }
 
@@ -81,13 +81,8 @@ class Program
 
             new User.User(TempUsername, TempPassword).Generate();
 
-            Console.WriteLine("Account Made");
-            System.Threading.Thread.Sleep(5000);
-            goto Start;
-        } else if (Tuple.Item1 == 2) {
-            Console.WriteLine("Public Chat not exist yet");
-            System.Threading.Thread.Sleep(5000);
-            //Not Valid Account Username
+            Console.WriteLine("Account Made (wait a sec)");
+            System.Threading.Thread.Sleep(3000);
             goto Start;
         }
 
@@ -109,13 +104,46 @@ class Program
 
         if (!(User.User.Exists(Username) && User.User.Exists_PublicKey(CurrentUser.Key.Public))) {
             Console.WriteLine("Not The Correct Password");
-            System.Threading.Thread.Sleep(5000);
+            Console.WriteLine("Login Timeout: 5");
+            System.Threading.Thread.Sleep(500);
+            Console.WriteLine("Login Timeout: 4");
+            System.Threading.Thread.Sleep(500);
+            Console.WriteLine("Login Timeout: 3");
+            System.Threading.Thread.Sleep(500);
+            Console.WriteLine("Login Timeout: 2");
+            System.Threading.Thread.Sleep(500);
+            Console.WriteLine("Login Timeout: 1");
+            System.Threading.Thread.Sleep(500);
             goto Start;
         }
 
         Console.WriteLine("Correct Password");
 
-        BoardDimensions = CurrentUser.Read_User_BoardSettings();
+
+
+        while (true) {
+            Content = new string[3]{"Private Chat", "Public Chat (404 not found)", "Settings"};
+            BoardDimensions = CurrentUser.Read_User_BoardSettings();
+            Tuple = MenuLoop(Content, BoardDimensions, false);
+
+            if (Tuple.Item1 == 0) {
+                PrivateChat(CurrentUser);
+            } else if (Tuple.Item1 == 1) {
+                Console.WriteLine("Not Quite Yet Here");
+                System.Threading.Thread.Sleep(1000);
+            } else if (Tuple.Item1 == 2) {
+                ChangeSettings(CurrentUser);
+            }
+        }
+    }
+
+
+
+
+    public static void PrivateChat(User.User CurrentUser) {
+        DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
+        Tuple<int, string> Tuple = new Tuple<int, string>(0, "");
+        Tuple<int,int> BoardDimensions = CurrentUser.Read_User_BoardSettings();
 
         ChooseChat:
         bool ChooseChatLoop = true;
@@ -157,7 +185,9 @@ class Program
             for (int i = 0; i < Step-1; i++) {
                 if ((Multiplyer*Step)+i < var.Length) {
                     DisplayedChats[i] = var[(Multiplyer*Step)+i];
-                } if ((Multiplyer*Step)+i >= var.Length) { DisplayedChats[i] = "{EMPTY}"; }
+                } if ((Multiplyer*Step)+i >= var.Length) {
+                    DisplayedChats[i] = "{EMPTY}";
+                }
             }
             DisplayedChats[Step-1] = "Go Back";
             DisplayedChats[Step] = "Next (pg "+Multiplyer+"/"+Math.Ceiling((decimal)(var.Length/Step))+")";
@@ -175,30 +205,14 @@ class Program
                 CurrentUser.Generate_Chat(DisplayedChats[Tuple.Item1]);
             }
         }
-
-
-
         string SelectedChat = DisplayedChats[Tuple.Item1];
-
+        string OtherUser = SelectedChat;
         SelectedChat = CurrentUser.Read_Messages_FileName(SelectedChat);
-
-
         string[] ChatContent = File.ReadLines(@"chats\"+SelectedChat+".txt").ToArray();
-
-
         string[] DecryptedChatContent = CurrentUser.Read_Messages_Chat(ChatContent);
-
-        //User.Display.Content(DecryptedChatContent);
-
         Tuple<string, string> SymmetricKey = CurrentUser.Read_Chat_SymmetricKey(ChatContent);
-
-        
-        // while (true) { System.Threading.Thread.Sleep(5000); }
-
-
-        PrivateChatLoop(SelectedChat, BoardDimensions, CurrentUser, SymmetricKey);
-
-        
+        TextListener.StopListening();
+        PrivateChatLoop(SelectedChat, BoardDimensions, CurrentUser, SymmetricKey, OtherUser);
     }
 
 
@@ -246,7 +260,7 @@ class Program
         return new Tuple<int, string>(Pointer, TypedText);
     }
 
-    public static void PrivateChatLoop(string SelectedChat, Tuple<int, int> BoardDimensions, User.User CurrentUser, Tuple<string, string> SymmetricKey) {
+    public static void PrivateChatLoop(string SelectedChat, Tuple<int, int> BoardDimensions, User.User CurrentUser, Tuple<string, string> SymmetricKey, string OtherUser) {
         DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
         DMSExtras.DMSExtras.ChatListener ChatListener = new DMSExtras.DMSExtras.ChatListener();
 
@@ -273,7 +287,7 @@ class Program
         TextListener.StartListening();
         while (true)
         {
-            // Console.WriteLine("start");
+
             Thread.Sleep(50);
 
             if (TextListener.GetEndProgram() && !string.IsNullOrEmpty(TypedText)) {
@@ -281,8 +295,11 @@ class Program
                     if (BadWords.BadWords.list.Any(TypedText.Contains)) {
                         Console.WriteLine("bad Word Found, Message not Sent");
                         System.Threading.Thread.Sleep(1000);
+                        TextListener.StopListening();
+                        TextListener.SetEndProgram(false);
+                        TextListener.StartListening();
                     } else {
-                        CurrentUser.Write_Messages_Chat(SymmetricKey, SelectedChat, TypedText);
+                        CurrentUser.Write_Messages_Chat(SymmetricKey, SelectedChat, "["+CurrentUser.Username+"] "+TypedText);
 
                         TextListener.StopListening();
                         TextListener.SetTypedText("");
@@ -297,7 +314,7 @@ class Program
 
                 TypedText = TextListener.GetTypedText();
 
-                User.User.Display.Content(DecryptedMessages,BoardDimensions,TypedText, true);
+                User.User.Display.Content(DecryptedMessages,BoardDimensions,TypedText, true, OtherUser);
                 // Console.WriteLine("text end");
             
             }
@@ -309,12 +326,98 @@ class Program
                 ChatMessages = ChatListener.GetChatContent();
                 DecryptedMessages = CurrentUser.Read_Messages_Chat(ChatMessages);
 
-
-                User.User.Display.Content(DecryptedMessages,BoardDimensions,TypedText, true);
+                User.User.Display.Content(DecryptedMessages,BoardDimensions,TypedText, true, OtherUser);
                 // Console.WriteLine("chat end");
 
             }
             // Console.WriteLine("end");
+        }
+    }
+
+    public static void ChangeSettings(User.User CurrentUser) {
+        Tuple<int,int> BoardDimensions = CurrentUser.Read_User_BoardSettings();
+        DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
+        string connectionString = "Data Source=UserList.db;Version=3;";
+
+        string[] Content = new string[3]{"Exit Settings", "Width: "+BoardDimensions.Item1, "Height: "+BoardDimensions.Item2};
+        
+        TextListener.SetPointer(0);
+        TextListener.SetTypedText(" ");
+        TextListener.SetEndProgram(false);
+
+        int Pointer = 0;
+        string TypedText = " ";
+        int TempInt = 0;
+        string TempString = "";
+        var Value = 0;
+
+        User.User.Display.With.Pointer(Content,BoardDimensions,Pointer,TypedText);
+
+        TextListener.StartListening();
+
+        while (true) {
+            Thread.Sleep(50);
+            // Console.WriteLine(Pointer);
+            if (TypedText != TextListener.GetTypedText()) {
+
+                TypedText = TextListener.GetTypedText();
+
+                User.User.Display.With.Pointer(Content,BoardDimensions,Pointer,TypedText);
+            }
+
+            if (Pointer != TextListener.GetPointer()) {
+
+                Pointer = TextListener.GetPointer();
+
+                if (Pointer >= Content.Length) {
+                    TextListener.SetPointer(0);
+                } else if (Pointer < 0) {
+                    TextListener.SetPointer(Content.Length-1);
+                }
+
+                User.User.Display.With.Pointer(Content,BoardDimensions,Pointer,TypedText);
+                
+            }
+
+            if (TextListener.GetEndProgram()) {
+                if (Pointer == 0) {
+                    TextListener.StopListening();
+                    return;
+                } else if (Pointer == 1) {
+                    if (int.TryParse(TypedText, out TempInt)) {
+                        Value = int.Parse(TypedText);
+                    } else {
+                        Value = 25;
+                    }
+                    TempString = "Width";
+                } else if (Pointer == 2) {
+                    if (int.TryParse(TypedText, out TempInt)) {
+                        Value = int.Parse(TypedText);
+                    } else {
+                        Value = 25;
+                    }
+                    TempString = "Height";
+                }
+
+                using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = "UPDATE Main SET "+TempString+" = @newValue WHERE Username = @username";
+                    using (SQLiteCommand command = new SQLiteCommand(sql, connection))
+                    {
+                        command.Parameters.AddWithValue("@newValue", Value);
+                        command.Parameters.AddWithValue("@username", CurrentUser.Username);
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                TextListener.StopListening();
+                TextListener.SetEndProgram(false);
+                TextListener.SetTypedText(" ");
+                TextListener.StartListening();
+                BoardDimensions = CurrentUser.Read_User_BoardSettings();
+                Content = new string[3]{"Exit", "Width: "+BoardDimensions.Item1, "Height: "+BoardDimensions.Item2};
+            }
         }
     }
 }

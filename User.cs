@@ -208,7 +208,10 @@ namespace User
 
 
             for (int i = 2; i < EncryptedMessages.Length; i++) {
-                DecryptedMessages[i-2] = SymmetricEncryption.DecryptString(SymmetricKey.Item1, EncryptedMessages[i], SymmetricKey.Item2);
+                DecryptedMessages[i-2] = 
+                    System.Text.Encoding.Default.GetString(Security.Encode.HexStringToByteArray(
+                        SymmetricEncryption.DecryptString(SymmetricKey.Item1, EncryptedMessages[i], SymmetricKey.Item2)
+                    ));
             }
 
             return DecryptedMessages;
@@ -285,8 +288,17 @@ namespace User
 
 
         public void Write_Messages_Chat(Tuple<string, string> SymmetricKey, string ChatName, string Content) {
+            WriteToChat:
             //SymmetricEncryption.EncryptString(SymmetricKey.Item1, this.Username+"   "+Name, SymmetricKey.Item2);
-            File.AppendAllText(@"chats\"+ChatName+".txt", "\n"+SymmetricEncryption.EncryptString(SymmetricKey.Item1, "["+this.Username+"] "+Content, SymmetricKey.Item2));
+            try {
+                File.AppendAllText(@"chats\"+ChatName+".txt", "\n"+
+                    SymmetricEncryption.EncryptString(SymmetricKey.Item1, 
+                        Encode.ByteArrayToHexString(Encoding.ASCII.GetBytes(Content)),
+                    SymmetricKey.Item2)
+                );
+            } catch {
+                goto WriteToChat;
+            }
         }
 
         public static string Read_User_PublicKey(string User) {
@@ -376,12 +388,12 @@ namespace User
                 }
 
             }
-            public static void Content(string[] Content, Tuple<int, int> BoardDimensions, string TypedText = "", bool IfChat = false) {
+            public static void Content(string[] Content, Tuple<int, int> BoardDimensions, string TypedText = "", bool IfChat = false, string Username = "TEMPVALUE") {
                 Board Board = new Board(BoardDimensions.Item1, BoardDimensions.Item2);
                 Board = Square.Create(new Square(Board.Width,Board.Height,Tuple.Create(0,0)), Board);
                 
                 if (IfChat) {
-                    int Interval = (BoardDimensions.Item1-3)*2; // your interval
+                    int Interval = (BoardDimensions.Item1-2)*2; // your interval
                     List<string> DisplayedMessages = new List<string>(); // we use a List for simplicity, you can convert it to an array later
 
                     foreach (string message in Content)
@@ -406,6 +418,8 @@ namespace User
                     Array.Reverse(DisplayedMessagesArray);
 
                     int VerticalBorder = 5;
+                    Board = Line.Create(new Line(Tuple.Create(0, Board.Height-3),Tuple.Create(Board.Width, Board.Height-3)), Board);
+                    Board = Text.Create(new Text(Tuple.Create(1,Board.Height-2), "Chatting With: "+Username), Board);
                     for (int i = 0; (i < BoardDimensions.Item2 - VerticalBorder) && (i < DisplayedMessagesArray.Length); i++) {
                         Board = Text.Create(new Text(Tuple.Create(2,2+i), DisplayedMessagesArray[i]), Board);
                     }

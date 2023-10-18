@@ -474,6 +474,33 @@ namespace User
 
                     return returnVal;
                 }
+                public static string[] Public() {
+                    if (!Directory.Exists("chatsPublic")) {
+                        Directory.CreateDirectory("chatsPublic");
+                    }
+                    if (!System.IO.File.Exists(@"chatsPublic\Main.txt")) {
+                        using (FileStream fs = File.Create(@"chatsPublic\Main.txt"))
+                        {
+                            // Add some text to file
+                            Byte[] title = new UTF8Encoding(true).GetBytes("");
+                            fs.Write(title, 0, title.Length);
+                        }
+                        // Open the stream and read it back.
+                        using (StreamWriter writer = new StreamWriter(@"chatsPublic\Main.txt"))
+                        {
+                            writer.WriteLine("Start Of Chat");
+                        }
+                    }
+                    FileInfo[] files = new DirectoryInfo("chatsPublic").GetFiles("*.txt");
+
+                    string[] fileNames = new string[files.Length];
+
+                    for (int i = 0; i < fileNames.Length; i++) {
+                        fileNames[i] = files[i].Name.Replace(".txt", "");
+                    }
+
+                    return fileNames;
+                }
             }
             public class Users
             {

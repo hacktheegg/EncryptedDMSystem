@@ -338,7 +338,7 @@ namespace DMSExtras
 
                 while (true) {
                     try {
-                        ChatContent = File.ReadLines(@"chats\"+ChatRoom+".txt").ToArray();
+                        ChatContent = File.ReadLines(ChatRoom+".txt").ToArray();
                     } catch {
                         Console.Write("");
                     }
@@ -350,15 +350,25 @@ namespace DMSExtras
         public class TextListener {
             private string TypedText;
             private int Pointer = 0;
-            private bool EndProgram = false;
+            private bool EnterPressed = false;
+            private bool ESCPressed = false;
             private bool isListening = false;
             private Thread listeningThread;
             private readonly object lockObject = new object();
 
-            public void SetEndProgram(bool var) {
+            public void SetEnterPressed(bool var) {
                 Monitor.Enter(lockObject);
                 try {
-                    EndProgram = var;
+                    EnterPressed = var;
+                } finally {
+                    Monitor.Exit(lockObject);
+                }
+            }
+
+            public void SetESCPressed(bool var) {
+                Monitor.Enter(lockObject);
+                try {
+                    ESCPressed = var;
                 } finally {
                     Monitor.Exit(lockObject);
                 }
@@ -382,10 +392,19 @@ namespace DMSExtras
                 }
             }
 
-            public bool GetEndProgram() {
+            public bool GetEnterPressed() {
                 Monitor.Enter(lockObject);
                 try {
-                    return EndProgram;
+                    return EnterPressed;
+                } finally {
+                    Monitor.Exit(lockObject);
+                }
+            }
+
+            public bool GetESCPressed() {
+                Monitor.Enter(lockObject);
+                try {
+                    return ESCPressed;
                 } finally {
                     Monitor.Exit(lockObject);
                 }
@@ -417,7 +436,9 @@ namespace DMSExtras
                         if (Console.KeyAvailable) {
                             var key = Console.ReadKey(true);
                             if (key.Key == ConsoleKey.Enter) {
-                                SetEndProgram(true);
+                                SetEnterPressed(true);
+                            } else if (key.Key == ConsoleKey.Escape) {
+                                SetESCPressed(true);
                             } else if (key.Key == ConsoleKey.Backspace && !string.IsNullOrEmpty(GetTypedText())) {
                                 Monitor.Enter(lockObject);
                                 try {

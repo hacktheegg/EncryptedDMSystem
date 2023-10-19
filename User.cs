@@ -188,10 +188,10 @@ namespace User
             } else if (File.Exists(@"chats\" + ChatNameB + ".txt")) {
                 return ChatNameB;
             } else {
+                Console.WriteLine(ChatNameA);
+                Console.WriteLine(ChatNameB);
                 Console.WriteLine("That Chat Does Not Exist");
-                while (true) {
-                    Console.Read();
-                }
+                throw new InvalidOperationException("That Chat Does Not Exist");
             }
         }
 
@@ -388,7 +388,7 @@ namespace User
                 }
 
             }
-            public static void Content(string[] Content, Tuple<int, int> BoardDimensions, string TypedText = "", bool IfChat = false, string Username = "TEMPVALUE") {
+            public static void Content(string[] Content, Tuple<int, int> BoardDimensions, string TypedText = "", bool IfChat = false, string Username = "TEMPVALUE", int Pointer = 0) {
                 Board Board = new Board(BoardDimensions.Item1, BoardDimensions.Item2);
                 Board = Square.Create(new Square(Board.Width,Board.Height,Tuple.Create(0,0)), Board);
                 
@@ -420,8 +420,9 @@ namespace User
                     int VerticalBorder = 5;
                     Board = Line.Create(new Line(Tuple.Create(0, Board.Height-3),Tuple.Create(Board.Width, Board.Height-3)), Board);
                     Board = Text.Create(new Text(Tuple.Create(1,Board.Height-2), "Chatting With: "+Username), Board);
-                    for (int i = 0; (i < BoardDimensions.Item2 - VerticalBorder) && (i < DisplayedMessagesArray.Length); i++) {
-                        Board = Text.Create(new Text(Tuple.Create(2,2+i), DisplayedMessagesArray[i]), Board);
+
+                    for (int i = 0; (i < BoardDimensions.Item2 - VerticalBorder) && (i < DisplayedMessagesArray.Length) && (DisplayedMessagesArray.Length > i+Pointer); i++) {
+                        Board = Text.Create(new Text(Tuple.Create(2,2+i), DisplayedMessagesArray[i+Pointer]), Board);
                     }
                 } else {
                     for (int i = 0; i < Content.Length; i++) {

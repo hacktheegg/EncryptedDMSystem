@@ -1,0 +1,20 @@
+1.4.0
+new features:
+	arrow keys in chats scroll
+	attempting to chat with BugReport suggests to use github
+bugfixes:
+	filter list now filters capital letter strings too
+	creating a new chat and already created chat lists are now sorted
+1.3.0
+new features:
+	the ESC now goes back
+1.2.0
+new features:
+	public chat
+found bugs:
+	will freeze if 2 users send message at same time, ends when one closes the program
+1.1.1
+bugfixes:
+	rendering is faster
+	it no longer starts eating inputs after entering settings
+	ENCRYPTION METHOD WAS CHANGED

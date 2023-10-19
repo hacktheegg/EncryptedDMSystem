@@ -65,7 +65,7 @@ class Program
 
             Tuple = MenuLoop(Content, BoardDimensions, true);
 
-            if (BadWords.BadWords.list.Any(Tuple.Item2.Contains)) {
+            if (BadWords.BadWords.list.Any(Tuple.Item2.ToLower().Contains)) {
                 Console.WriteLine("bad Word Found, Redo Step (wait a sec)");
                 System.Threading.Thread.Sleep(3000);
                 goto BadNameUsername;
@@ -149,6 +149,7 @@ class Program
         bool ChooseChatLoop = true;
 
         string[] var = Admin.Read.Chats.Public();
+        Array.Sort(var);
 
         int Multiplyer = 0;
         int Step = BoardDimensions.Item2-6;
@@ -179,6 +180,7 @@ class Program
         }
 
         var = Admin.Read.Chats.Public();
+        Array.Sort(var);
         Multiplyer = 0;
 
         while (!TextListener.GetESCPressed() && (Tuple.Item1 == Step-1 || Tuple.Item1 == Step || Tuple.Item1 == Step+1)) {
@@ -219,12 +221,14 @@ class Program
         Tuple<int,int> BoardDimensions = CurrentUser.Read_User_BoardSettings();
         DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
         DMSExtras.DMSExtras.ChatListener ChatListener = new DMSExtras.DMSExtras.ChatListener();
+        bool UpdateBoard = false;
+        int Pointer = 0;
 
         string TypedText = " ";
 
         Thread threadChat = new Thread(() =>
         {
-            ChatListener.StartListening(@"chatsPublic\"+SelectedChat);
+            ChatListener.StartListening(@"chatsPublic\"+SelectedChat+".txt");
         });
 
         threadChat.Start();
@@ -246,7 +250,7 @@ class Program
 
             if (TextListener.GetEnterPressed() && !string.IsNullOrEmpty(TypedText)) {
                     
-                if (BadWords.BadWords.list.Any(TypedText.Contains)) {
+                if (BadWords.BadWords.list.Any(TypedText.ToLower().Contains)) {
                     Console.WriteLine("bad Word Found, Message not Sent");
                     System.Threading.Thread.Sleep(1000);
                     TextListener.StopListening();
@@ -262,33 +266,36 @@ class Program
 
                     TextListener.StopListening();
                     TextListener.SetTypedText("");
+                    TextListener.SetPointer(0);
                     TextListener.SetEnterPressed(false);
                     TextListener.StartListening();
                 }
             }
 
             if (TypedText != TextListener.GetTypedText()) {
-
-                // Console.WriteLine("text start");
-
                 TypedText = TextListener.GetTypedText();
+                UpdateBoard = true;
+            }
 
-                User.User.Display.Content(ChatMessages,BoardDimensions,TypedText, true, SelectedChat);
-                // Console.WriteLine("text end");
-            
+            if (Pointer != TextListener.GetPointer()) {
+                if (TextListener.GetPointer() < 0) {
+                    TextListener.StopListening();
+                    TextListener.SetPointer(0);
+                    TextListener.StartListening();
+                }
+                UpdateBoard = true;
+                Pointer = TextListener.GetPointer();
             }
 
             if (!ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
-
-                // Console.WriteLine("chat start");
-
                 ChatMessages = ChatListener.GetChatContent();
-
-                User.User.Display.Content(ChatMessages,BoardDimensions,TypedText, true, SelectedChat);
-                // Console.WriteLine("chat end");
-
+                UpdateBoard = true;
             }
-            // Console.WriteLine("end");
+
+            if (UpdateBoard) {
+                User.User.Display.Content(ChatMessages,BoardDimensions,TypedText, true, SelectedChat, Pointer);
+                UpdateBoard = false;
+            }
         }
 
 
@@ -312,6 +319,7 @@ class Program
         bool ChooseChatLoop = true;
 
         string[] var = CurrentUser.Read_Chats_Allowed(@"chats\");
+        Array.Sort(var);
 
         int Multiplyer = 0;
         int Step = BoardDimensions.Item2-6;
@@ -342,6 +350,7 @@ class Program
         }
 
         var = Admin.Read.Users.All();
+        Array.Sort(var);
         Multiplyer = 0;
 
         while (!TextListener.GetESCPressed() && (Tuple.Item1 == Step-1 || Tuple.Item1 == Step || Tuple.Item1 == Step+1)) {
@@ -369,6 +378,11 @@ class Program
             }
         }
         if (!TextListener.GetESCPressed()) {
+            if (DisplayedChats[Tuple.Item1] == "BugReport") {
+                Console.WriteLine("submit bugs here, https://github.com/hacktheegg/EncryptedDMSystem/issues/new/choose");
+                Console.ReadKey();
+                Console.ReadKey();
+            }
             string SelectedChat = DisplayedChats[Tuple.Item1];
             string OtherUser = SelectedChat;
             SelectedChat = CurrentUser.Read_Messages_FileName(SelectedChat);
@@ -429,12 +443,14 @@ class Program
     public static void PrivateChatLoop(string SelectedChat, Tuple<int, int> BoardDimensions, User.User CurrentUser, Tuple<string, string> SymmetricKey, string OtherUser) {
         DMSExtras.DMSExtras.TextListener TextListener = new DMSExtras.DMSExtras.TextListener();
         DMSExtras.DMSExtras.ChatListener ChatListener = new DMSExtras.DMSExtras.ChatListener();
+        bool UpdateBoard = false;
+        int Pointer = 0;
 
         string TypedText = " ";
 
         Thread threadChat = new Thread(() =>
         {
-            ChatListener.StartListening(@"chats\"+SelectedChat);
+            ChatListener.StartListening(@"chats\"+SelectedChat+".txt");
         });
 
         threadChat.Start();
@@ -458,7 +474,7 @@ class Program
 
             if (TextListener.GetEnterPressed() && !string.IsNullOrEmpty(TypedText)) {
                     
-                    if (BadWords.BadWords.list.Any(TypedText.Contains)) {
+                    if (BadWords.BadWords.list.Any(TypedText.ToLower().Contains)) {
                         Console.WriteLine("bad Word Found, Message not Sent");
                         System.Threading.Thread.Sleep(1000);
                         TextListener.StopListening();
@@ -469,34 +485,38 @@ class Program
 
                         TextListener.StopListening();
                         TextListener.SetTypedText("");
+                        TextListener.SetPointer(0);
                         TextListener.SetEnterPressed(false);
                         TextListener.StartListening();
                     }
             }
 
             if (TypedText != TextListener.GetTypedText()) {
-
-                // Console.WriteLine("text start");
-
                 TypedText = TextListener.GetTypedText();
+                UpdateBoard = true;
+            }
 
-                User.User.Display.Content(DecryptedMessages,BoardDimensions,TypedText, true, OtherUser);
-                // Console.WriteLine("text end");
-            
+            if (Pointer != TextListener.GetPointer()) {
+                if (TextListener.GetPointer() < 0) {
+                    TextListener.StopListening();
+                    TextListener.SetPointer(0);
+                    TextListener.StartListening();
+                }
+                UpdateBoard = true;
+                Pointer = TextListener.GetPointer();
             }
 
             if (!ChatMessages.SequenceEqual(ChatListener.GetChatContent())) {
-
-                // Console.WriteLine("chat start");
-
                 ChatMessages = ChatListener.GetChatContent();
                 DecryptedMessages = CurrentUser.Read_Messages_Chat(ChatMessages);
-
-                User.User.Display.Content(DecryptedMessages,BoardDimensions,TypedText, true, OtherUser);
-                // Console.WriteLine("chat end");
+                UpdateBoard = true;
 
             }
-            // Console.WriteLine("end");
+
+            if (UpdateBoard) {
+                User.User.Display.Content(DecryptedMessages,BoardDimensions,TypedText, true, OtherUser, Pointer);
+                UpdateBoard = false;
+            }
         }
         TextListener.StopListening();
     }

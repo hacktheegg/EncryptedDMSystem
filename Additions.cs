@@ -338,7 +338,7 @@ namespace DMSExtras
 
                 while (true) {
                     try {
-                        ChatContent = File.ReadLines(ChatRoom+".txt").ToArray();
+                        ChatContent = File.ReadLines(ChatRoom).ToArray();
                     } catch {
                         Console.Write("");
                     }

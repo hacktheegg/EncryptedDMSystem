@@ -37,12 +37,16 @@ class Program
         
 
         Console.WriteLine("    !!Epilepsy Warning!!");
-        Console.WriteLine("This program flickers a lot when running\n");
+        Console.WriteLine("This program flickers when running\n");
         Console.WriteLine(
             "I am not responsible for what is said here\n"+
-            "though there is some moderation, I can only moderate if\n"+
-            "something is reported (Security is the priority/no report\nSystem yet)"
+            "due to lack of moderation tools at this moment\n"+
+            "(and I cannot access instances remotely due to\n"+
+            "not wanting to do networking)\n"
         );
+        Console.WriteLine("New updates can be found at: https://github.com/hacktheegg/EncryptedDMSystem/releases");
+        Console.WriteLine("Check there regularly for newer versions (I don't have anything better to do)");
+        Console.WriteLine("Version: 1.4.0");
         Console.ReadKey(true);
         Console.Clear();
 
